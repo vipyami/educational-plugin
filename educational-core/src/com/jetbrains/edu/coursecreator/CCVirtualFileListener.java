@@ -44,7 +44,7 @@ public class CCVirtualFileListener extends VirtualFileAdapter {
       return;
     }
 
-    String taskRelativePath = StudyUtils.pathRelativeToTask(createdFile);
+    String taskRelativePath = StudyUtils.pathRelativeToTask(myProject, createdFile);
 
     EduPluginConfigurator configurator = EduPluginConfiguratorManager.forLanguage(course.getLanguageById());
     if (configurator != null && configurator.excludeFromArchive(createdFile.getPath())) {
@@ -123,11 +123,11 @@ public class CCVirtualFileListener extends VirtualFileAdapter {
     lesson.getTaskList().remove(task);
   }
 
-  private static void deleteTaskFile(@NotNull final VirtualFile removedTaskFile, TaskFile taskFile) {
+  private void deleteTaskFile(@NotNull final VirtualFile removedTaskFile, TaskFile taskFile) {
     Task task = taskFile.getTask();
     if (task == null) {
       return;
     }
-    task.getTaskFiles().remove(StudyUtils.pathRelativeToTask(removedTaskFile));
+    task.getTaskFiles().remove(StudyUtils.pathRelativeToTask(myProject, removedTaskFile));
   }
 }
