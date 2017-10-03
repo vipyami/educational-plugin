@@ -1,11 +1,15 @@
 package com.jetbrains.edu.learning.intellij.generation;
 
+import com.intellij.ide.util.newProjectWizard.AbstractProjectWizard;
+import com.intellij.ide.util.newProjectWizard.StepSequence;
+import com.intellij.ide.util.projectWizard.ProjectBuilder;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.ModifiableModuleModel;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleWithNameAlreadyExists;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ui.configuration.actions.NewModuleAction;
 import com.intellij.openapi.util.InvalidDataException;
 import com.jetbrains.edu.learning.StudyTaskManager;
 import com.jetbrains.edu.learning.core.EduNames;
@@ -55,8 +59,17 @@ public class EduModuleBuilderUtils {
     final Lesson additionalMaterials = course.getLessons(true).stream().
         filter(lesson -> EduNames.PYCHARM_ADDITIONAL.equals(lesson.getName())).findFirst().orElse(null);
 
-    EduUtilModuleBuilder utilModuleBuilder = new EduUtilModuleBuilder(moduleDir, additionalMaterials);
-    Module utilModule = utilModuleBuilder.createModule(moduleModel);
+    Module utilModule = new NewModuleAction().createModuleFromWizard(project, null, new AbstractProjectWizard("", project, "") {
+      @Override
+      public StepSequence getSequence() {
+        return null;
+      }
+
+      @Override
+      public ProjectBuilder getProjectBuilder() {
+        return new EduUtilModuleBuilder(moduleDir, additionalMaterials);
+      }
+    });
 
     createLessonModules(moduleModel, course, moduleDir, utilModule);
   }
