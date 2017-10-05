@@ -32,10 +32,10 @@ class CCModuleBuilder(private val myCourse: Course) : EduCourseModuleBuilder() {
 
     StudyTaskManager.getInstance(project).course = myCourse
     StudyUtils.registerStudyToolWindow(myCourse, project)
+    configurator.createCourseModuleContent(moduleModel, project, myCourse, moduleFileDirectory)
 
     // If we drop `registerPostStartupActivity` modules will not be created
     StartupManager.getInstance(project).registerPostStartupActivity {
-      configurator.createCourseModuleContent(moduleModel, project, myCourse, moduleFileDirectory)
       ApplicationManager.getApplication().runWriteAction {
         val lessonDir = CCCreateLesson().createItem(project, project.baseDir, myCourse, false)
         if (lessonDir == null) {
