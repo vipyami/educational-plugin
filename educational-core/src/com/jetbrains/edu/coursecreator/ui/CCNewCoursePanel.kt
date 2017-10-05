@@ -138,14 +138,9 @@ class CCNewCoursePanel : JPanel() {
       !FileUtil.ensureCanCreateFile(File(FileUtil.toSystemDependentName(locationString))) -> "Can't create course at this location"
       else -> null
     }
-    if (message != null) {
-      myValidationListener?.onInputDataValidated(false)
-      myErrorLabel.isVisible = true
-      myErrorLabel.text = message
-    } else {
-      myValidationListener?.onInputDataValidated(true)
-      myErrorLabel.isVisible = false
-    }
+    myErrorLabel.text = message
+    myErrorLabel.isVisible = message != null
+    myValidationListener?.onInputDataValidated(message == null)
   }
 
   private fun createLocationField(): LabeledComponent<TextFieldWithBrowseButton> {
