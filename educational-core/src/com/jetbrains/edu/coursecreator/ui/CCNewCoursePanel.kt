@@ -13,7 +13,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.HideableDecorator
 import com.intellij.ui.IdeBorderFactory
-import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.CCFlags
 import com.intellij.ui.layout.panel
@@ -25,7 +25,6 @@ import com.jetbrains.edu.learning.courseFormat.Course
 import java.awt.BorderLayout
 import java.awt.event.ItemEvent
 import java.io.File
-import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTextArea
@@ -50,20 +49,21 @@ class CCNewCoursePanel : JPanel() {
   init {
     layout = BorderLayout()
     preferredSize = JBUI.size(700, 400)
+    minimumSize = JBUI.size(700, 400)
 
+    myDescriptionTextArea.rows = 10
+
+    val scrollPane = JBScrollPane(myDescriptionTextArea)
     myPanel = panel {
-      row("Language:") { myLanguageComboBox(CCFlags.pushX, CCFlags.growX) }
-      row("Title:") { myTitleField() }
-      row("Author") { myAuthorField() }
-      row("Description:") { myDescriptionTextArea() }
+      row("Title:") { myTitleField(CCFlags.pushX) }
+      row("Instructor:") { myAuthorField() }
+      row("Language:") { myLanguageComboBox(CCFlags.growX) }
+      row("Description:") { scrollPane(CCFlags.growX) }
     }
 
     myTitleField.document = CourseTitleDocument()
     myTitleField.complementaryTextField = myPathField
     myPathField.complementaryTextField = myTitleField
-
-    myDescriptionTextArea.rows = 5
-    myDescriptionTextArea.border = BorderFactory.createLineBorder(JBColor.border())
 
     val decorator = HideableDecorator(myAdvancedSettingsPlaceholder, "Advanced Settings", false)
     decorator.setContentComponent(myAdvancedSettings)
