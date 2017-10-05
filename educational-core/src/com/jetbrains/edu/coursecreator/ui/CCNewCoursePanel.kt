@@ -8,11 +8,14 @@ import com.intellij.openapi.extensions.Extensions
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.LabeledComponent
+import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.HideableDecorator
 import com.intellij.ui.IdeBorderFactory
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.CCFlags
@@ -28,6 +31,7 @@ import java.io.File
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTextArea
+import javax.swing.event.DocumentEvent
 import javax.swing.text.AttributeSet
 import javax.swing.text.PlainDocument
 
@@ -44,7 +48,11 @@ class CCNewCoursePanel : JPanel() {
   private val myPathField: PathField = PathField()
   private val myLocationField: LabeledComponent<TextFieldWithBrowseButton> = createLocationField()
 
+  private val myErrorLabel = JBLabel()
+
   private lateinit var mySelectedLanguage: Language
+
+  private var myValidationListener: ValidationListener? = null
 
   init {
     layout = BorderLayout()
@@ -70,8 +78,14 @@ class CCNewCoursePanel : JPanel() {
     myAdvancedSettings.border = JBUI.Borders.empty(0, IdeBorderFactory.TITLED_BORDER_INDENT, 5, 0)
     myAdvancedSettingsPlaceholder.add(myAdvancedSettings, BorderLayout.CENTER)
 
+    myErrorLabel.foreground = MessageType.ERROR.titleForeground
+
+    val bottomPanel = JPanel(BorderLayout())
+    bottomPanel.add(myErrorLabel, BorderLayout.NORTH)
+    bottomPanel.add(myAdvancedSettingsPlaceholder, BorderLayout.SOUTH)
+
     add(myPanel, BorderLayout.NORTH)
-    add(myAdvancedSettingsPlaceholder, BorderLayout.SOUTH)
+    add(bottomPanel, BorderLayout.SOUTH)
 
     myLanguageComboBox.addItemListener { e ->
       if (e.stateChange == ItemEvent.SELECTED) {
@@ -79,6 +93,7 @@ class CCNewCoursePanel : JPanel() {
       }
     }
 
+    setupValidation()
     setDefaultValues()
     collectSupportedLanguages()
   }
@@ -96,13 +111,41 @@ class CCNewCoursePanel : JPanel() {
 
   val locationString: String get() = myLocationField.component.text
 
-  fun validateData(): ValidationResult = when {
-    myTitleField.text.isNullOrBlank() -> Err("Enter course title")
-    myAuthorField.text.isNullOrBlank() -> Err("Enter course author")
-    myDescriptionTextArea.text.isNullOrBlank() -> Err("Enter course description")
-    locationString.isBlank() -> Err("Enter project location")
-    !FileUtil.ensureCanCreateFile(File(FileUtil.toSystemDependentName(locationString))) -> Err("Can't create project")
-    else -> Ok
+  fun setValidationListener(listener: ValidationListener?) {
+    myValidationListener = listener
+    doValidation()
+  }
+
+  private fun setupValidation() {
+    val validator = object : DocumentAdapter() {
+      override fun textChanged(e: DocumentEvent) {
+        doValidation()
+      }
+    }
+
+    myTitleField.document.addDocumentListener(validator)
+    myAuthorField.document.addDocumentListener(validator)
+    myDescriptionTextArea.document.addDocumentListener(validator)
+    myLocationField.component.textField.document.addDocumentListener(validator)
+  }
+
+  private fun doValidation() {
+    val message = when {
+      myTitleField.text.isNullOrBlank() -> "Enter course title"
+      myAuthorField.text.isNullOrBlank() -> "Enter course author"
+      myDescriptionTextArea.text.isNullOrBlank() -> "Enter course description"
+      locationString.isBlank() -> "Enter course location"
+      !FileUtil.ensureCanCreateFile(File(FileUtil.toSystemDependentName(locationString))) -> "Can't create course at this location"
+      else -> null
+    }
+    if (message != null) {
+      myValidationListener?.onInputDataValidated(false)
+      myErrorLabel.isVisible = true
+      myErrorLabel.text = message
+    } else {
+      myValidationListener?.onInputDataValidated(true)
+      myErrorLabel.isVisible = false
+    }
   }
 
   private fun createLocationField(): LabeledComponent<TextFieldWithBrowseButton> {
@@ -166,6 +209,10 @@ class CCNewCoursePanel : JPanel() {
     private val DEFAULT_COURSE_NAME = "untitled"
   }
 
+  interface ValidationListener {
+    fun onInputDataValidated(isInputDataComplete: Boolean)
+  }
+
   private class LanguageWrapper(val language: Language) {
     override fun toString(): String = language.displayName
   }
@@ -203,8 +250,3 @@ class CCNewCoursePanel : JPanel() {
     }
   }
 }
-
-sealed class ValidationResult
-
-object Ok : ValidationResult()
-data class Err(val message: String) : ValidationResult()
