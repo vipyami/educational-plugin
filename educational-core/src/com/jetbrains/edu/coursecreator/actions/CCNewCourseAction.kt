@@ -16,8 +16,4 @@ class CCNewCourseAction : AnAction("Create New Course", "Create new educational 
   override fun update(e: AnActionEvent) {
     e.presentation.isEnabledAndVisible = PropertiesComponent.getInstance().getBoolean(COURSE_CREATOR_ENABLED)
   }
-
-  companion object {
-
-  }
 }
