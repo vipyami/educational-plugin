@@ -26,11 +26,10 @@ import com.jetbrains.edu.coursecreator.CCUtils
 import com.jetbrains.edu.learning.EduPluginConfigurator
 import com.jetbrains.edu.learning.courseFormat.Course
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.event.ItemEvent
 import java.io.File
-import javax.swing.JComponent
-import javax.swing.JPanel
-import javax.swing.JTextArea
+import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.text.AttributeSet
 import javax.swing.text.PlainDocument
@@ -38,7 +37,7 @@ import javax.swing.text.PlainDocument
 class CCNewCoursePanel : JPanel() {
 
   private val myPanel: JPanel
-  private val myLanguageComboBox: ComboBox<LanguageWrapper> = ComboBox()
+  private val myLanguageComboBox: ComboBox<LanguageData> = ComboBox()
   private val myTitleField: CourseTitleField = CourseTitleField()
   private val myAuthorField: JBTextField = JBTextField()
   private val myDescriptionTextArea: JTextArea = JTextArea()
@@ -60,6 +59,8 @@ class CCNewCoursePanel : JPanel() {
     minimumSize = JBUI.size(700, 400)
 
     myDescriptionTextArea.rows = 10
+    myDescriptionTextArea.lineWrap = true
+    myDescriptionTextArea.wrapStyleWord = true
 
     val scrollPane = JBScrollPane(myDescriptionTextArea)
     myPanel = panel {
@@ -78,18 +79,29 @@ class CCNewCoursePanel : JPanel() {
     myAdvancedSettings.border = JBUI.Borders.empty(0, IdeBorderFactory.TITLED_BORDER_INDENT, 5, 0)
     myAdvancedSettingsPlaceholder.add(myAdvancedSettings, BorderLayout.CENTER)
 
+    myErrorLabel.border = JBUI.Borders.emptyTop(8)
     myErrorLabel.foreground = MessageType.ERROR.titleForeground
 
     val bottomPanel = JPanel(BorderLayout())
-    bottomPanel.add(myErrorLabel, BorderLayout.NORTH)
-    bottomPanel.add(myAdvancedSettingsPlaceholder, BorderLayout.SOUTH)
+    bottomPanel.add(myErrorLabel, BorderLayout.SOUTH)
+    bottomPanel.add(myAdvancedSettingsPlaceholder, BorderLayout.NORTH)
 
     add(myPanel, BorderLayout.NORTH)
     add(bottomPanel, BorderLayout.SOUTH)
 
+    myLanguageComboBox.renderer = object : DefaultListCellRenderer() {
+      override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+        val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+        if (component is JLabel && value is LanguageData) {
+          component.text = value.language.displayName
+          component.icon = value.icon
+        }
+        return component
+      }
+    }
     myLanguageComboBox.addItemListener { e ->
       if (e.stateChange == ItemEvent.SELECTED) {
-        onLanguageSelected((e.item as LanguageWrapper).language)
+        onLanguageSelected((e.item as LanguageData).language)
       }
     }
 
@@ -155,14 +167,20 @@ class CCNewCoursePanel : JPanel() {
     if (userName != null) {
       myAuthorField.text = userName
     }
-
-    val file = FileUtil.findSequentNonexistentFile(File(ProjectUtil.getBaseDir()), DEFAULT_COURSE_NAME, "")
-    myTitleField.setTextManually(file.name)
-    myPathField.setTextManually(file.absolutePath)
   }
 
   private fun onLanguageSelected(language: Language) {
     mySelectedLanguage = language
+
+    val courseName = "${language.displayName.capitalize()} Course"
+    val file = FileUtil.findSequentNonexistentFile(File(ProjectUtil.getBaseDir()), courseName, "")
+    if (!myTitleField.isChangedByUser) {
+      myTitleField.setTextManually(file.name)
+      if (!myPathField.isChangedByUser) {
+        myPathField.setTextManually(file.absolutePath)
+      }
+    }
+
     val configurator = EduPluginConfigurator.INSTANCE.forLanguage(language) ?: return
     val labeledComponent = configurator.languageSettingsComponent(language)
     myAdvancedSettings.removeAll()
@@ -184,10 +202,11 @@ class CCNewCoursePanel : JPanel() {
                 LOG.info("Language with id $languageId not found")
                 null
               } else {
-                LanguageWrapper(language)
+                val logo = extension.instance.eduCourseProjectGenerator?.directoryProjectGenerator?.logo
+                LanguageData(language, logo)
               }
             }
-            .sortedBy { it.language.displayName }
+            .sortedBy { (language, _) -> language.displayName }
             .forEach { myLanguageComboBox.addItem(it) }
   }
 
@@ -200,17 +219,13 @@ class CCNewCoursePanel : JPanel() {
 
   companion object {
     private val LOG = Logger.getInstance(CCNewCoursePanel::class.java)
-
-    private val DEFAULT_COURSE_NAME = "untitled"
   }
 
   interface ValidationListener {
     fun onInputDataValidated(isInputDataComplete: Boolean)
   }
 
-  private class LanguageWrapper(val language: Language) {
-    override fun toString(): String = language.displayName
-  }
+  private data class LanguageData(val language: Language, val icon: Icon?)
 
   private class CourseTitleDocument : PlainDocument() {
     override fun insertString(offs: Int, str: String?, a: AttributeSet?) {
