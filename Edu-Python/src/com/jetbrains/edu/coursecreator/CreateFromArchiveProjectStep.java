@@ -56,7 +56,7 @@ class CreateFromArchiveProjectStep extends PyCharmNewProjectStep {
         StudyProjectGenerator generator = myGenerator.getGenerator();
         Course course = generator.addLocalCourse(path);
         assert course != null;
-        generator.setSelectedCourse(course);
+        myGenerator.setCourse(course);
       }
       return myGenerator;
     }
