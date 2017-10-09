@@ -144,7 +144,7 @@ class CCNewCoursePanel : JPanel() {
   private fun doValidation() {
     val message = when {
       myTitleField.text.isNullOrBlank() -> "Enter course title"
-      myAuthorField.text.isNullOrBlank() -> "Enter course author"
+      myAuthorField.text.isNullOrBlank() -> "Enter course instructor"
       myDescriptionTextArea.text.isNullOrBlank() -> "Enter course description"
       locationString.isBlank() -> "Enter course location"
       !FileUtil.ensureCanCreateFile(File(FileUtil.toSystemDependentName(locationString))) -> "Can't create course at this location"
