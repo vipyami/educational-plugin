@@ -17,7 +17,6 @@ import com.jetbrains.edu.learning.checker.StudyTaskChecker;
 import com.jetbrains.edu.learning.core.EduNames;
 import com.jetbrains.edu.learning.core.EduUtils;
 import com.jetbrains.edu.learning.courseFormat.Course;
-import com.jetbrains.edu.learning.courseFormat.TaskFile;
 import com.jetbrains.edu.learning.courseFormat.tasks.PyCharmTask;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.intellij.EduIntellijUtils;
@@ -36,7 +35,7 @@ public class EduKotlinPluginConfigurator extends EduPluginConfiguratorBase {
   static final String LEGACY_TESTS_KT = "tests.kt";
   static final String TESTS_KT = "Tests.kt";
   private EduKotlinCourseProjectGenerator myProjectGenerator = new EduKotlinCourseProjectGenerator();
-  private static final String TASK_KT = "Task.kt";
+  static final String TASK_KT = "Task.kt";
 
   @NotNull
   @Override
@@ -80,13 +79,7 @@ public class EduKotlinPluginConfigurator extends EduPluginConfiguratorBase {
                                        @NotNull VirtualFile parentDirectory, @NotNull Course course) {
     if (EduUtils.isAndroidStudio()) {
       try {
-        //TODO: do we have util method for this?
-        TaskFile taskFile = new TaskFile();
-        taskFile.setTask(task);
-        taskFile.name  = "Task.kt";
-        taskFile.text = "write your task text here";
-        task.addTaskFile(taskFile);
-        task.getTestsText().put(TESTS_KT, "write your test here");
+        EduKotlinCourseProjectGenerator.initTask(task);
         EduGradleModuleGenerator.createTaskModule(parentDirectory, task);
 
         //TODO: is there better way?
@@ -110,5 +103,4 @@ public class EduKotlinPluginConfigurator extends EduPluginConfiguratorBase {
   public EduCourseProjectGenerator getEduCourseProjectGenerator() {
     return myProjectGenerator;
   }
-
 }
