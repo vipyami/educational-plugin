@@ -52,7 +52,7 @@ public interface EduCourseProjectGenerator {
       return;
     }
     DirectoryProjectGenerator directoryProjectGenerator = getDirectoryProjectGenerator();
-    Project createdProject = AbstractNewProjectStep.doGenerateProject(null, location, directoryProjectGenerator, getProjectSettings());
+    Project createdProject = AbstractNewProjectStep.doGenerateProject(null, location, directoryProjectGenerator, file -> getProjectSettings());
     if (createdProject == null) {
       return;
     }
