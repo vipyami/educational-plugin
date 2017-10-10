@@ -22,20 +22,33 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class TaskDirectoryNode extends StudyDirectoryNode {
   @NotNull protected final Project myProject;
   protected final ViewSettings myViewSettings;
   @NotNull protected final Task myTask;
+  private final Collection<AbstractTreeNode> myAuxiliaryChildren;
+
+  public TaskDirectoryNode(@NotNull Project project,
+                           PsiDirectory value,
+                           ViewSettings viewSettings,
+                           @NotNull Task task,
+                           @NotNull Collection<AbstractTreeNode> auxiliaryChildren) {
+    super(project, value, viewSettings);
+    myProject = project;
+    myViewSettings = viewSettings;
+    myTask = task;
+    myAuxiliaryChildren = auxiliaryChildren;
+  }
 
   public TaskDirectoryNode(@NotNull Project project,
                            PsiDirectory value,
                            ViewSettings viewSettings,
                            @NotNull Task task) {
-    super(project, value, viewSettings);
-    myProject = project;
-    myViewSettings = viewSettings;
-    myTask = task;
+    this(project, value, viewSettings, task, Collections.emptyList());
   }
 
   @Override
@@ -100,5 +113,19 @@ public class TaskDirectoryNode extends StudyDirectoryNode {
   @Override
   public PsiDirectoryNode createChildDirectoryNode(StudyItem item, PsiDirectory value) {
     return new DirectoryNode(myProject, value, myViewSettings);
+  }
+
+  @Override
+  public Collection<AbstractTreeNode> getChildrenImpl() {
+    Collection<AbstractTreeNode> actualChildren = super.getChildrenImpl();
+    if (myAuxiliaryChildren.isEmpty()) {
+      return actualChildren;
+    }
+    Collection<AbstractTreeNode> newChildren = new ArrayList<>();
+    if (actualChildren != null) {
+      newChildren.addAll(actualChildren);
+    }
+    newChildren.addAll(myAuxiliaryChildren);
+    return newChildren;
   }
 }
