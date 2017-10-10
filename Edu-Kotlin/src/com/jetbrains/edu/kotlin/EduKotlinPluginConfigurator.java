@@ -2,6 +2,9 @@ package com.jetbrains.edu.kotlin;
 
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
+import com.intellij.openapi.externalSystem.model.ProjectSystemId;
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupManager;
@@ -85,6 +88,9 @@ public class EduKotlinPluginConfigurator extends EduPluginConfiguratorBase {
         task.addTaskFile(taskFile);
         task.getTestsText().put(TESTS_KT, "write your test here");
         EduGradleModuleGenerator.createTaskModule(parentDirectory, task);
+
+        //TODO: is there better way?
+        ExternalSystemUtil.refreshProjects(new ImportSpecBuilder(project, new ProjectSystemId("GRADLE")));
         return parentDirectory.findChild(EduNames.TASK + task.getIndex());
       } catch (IOException e) {
         LOG.error("Failed to create task");
