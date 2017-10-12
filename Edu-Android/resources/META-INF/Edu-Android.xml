@@ -1,4 +1,8 @@
 <idea-plugin>
     <depends>com.intellij.modules.lang</depends>
     <depends>org.jetbrains.android</depends>
+
+    <actions>
+        <action id="Educational.Test" class="com.jetbrains.edu.android.TestAction" text="Test Action" />
+    </actions>
 </idea-plugin>
