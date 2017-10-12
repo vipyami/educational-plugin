@@ -160,7 +160,7 @@ sourceSets {
     }
 }
 
-configure([project(':Edu-Python'), project(':Edu-Java'), project(':Edu-Kotlin')]) {
+configure([project(':Edu-Python'), project(':Edu-Java'), project(':Edu-Kotlin'), project(':Edu-Android')]) {
     dependencies {
         compile project(':educational-core')
     }
@@ -197,11 +197,15 @@ configure(project(':Edu-Python')) {
     intellij.plugins "PythonCore:$pythonPluginVersion"
 }
 
+configure(project(':Edu-Android')) {
+    intellij.plugins 'android'
+}
+
 runIde.systemProperty("-Didea.is.internal", "true")
 runIde.systemProperty("-ea", "")
 
 dependencies {
-    compile project(':educational-core'), project(':Edu-Python'), project(':Edu-Kotlin'), project(':Edu-Java')
+    compile project(':educational-core'), project(':Edu-Python'), project(':Edu-Kotlin'), project(':Edu-Java'), project(':Edu-Android')
 }
 
 idea {
