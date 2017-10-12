@@ -1,0 +1,4 @@
+<idea-plugin>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>org.jetbrains.android</depends>
+</idea-plugin>
