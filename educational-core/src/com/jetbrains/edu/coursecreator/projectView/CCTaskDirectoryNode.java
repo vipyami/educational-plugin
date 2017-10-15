@@ -21,12 +21,12 @@ import com.jetbrains.edu.learning.projectView.TaskDirectoryNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-
 public class CCTaskDirectoryNode extends TaskDirectoryNode {
-
-  public CCTaskDirectoryNode(@NotNull Project project, PsiDirectory value, ViewSettings viewSettings, @NotNull Task task, @NotNull Collection<AbstractTreeNode> auxiliaryChildren) {
-    super(project, value, viewSettings, task, auxiliaryChildren);
+  public CCTaskDirectoryNode(@NotNull Project project,
+                             PsiDirectory value,
+                             ViewSettings viewSettings,
+                             @NotNull Task task) {
+    super(project, value, viewSettings, task);
   }
 
   @Nullable
