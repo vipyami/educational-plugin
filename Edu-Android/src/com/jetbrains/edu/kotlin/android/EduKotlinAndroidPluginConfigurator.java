@@ -16,6 +16,7 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.messages.MessageBusConnection;
 import com.jetbrains.edu.kotlin.EduKotlinPluginConfigurator;
+import com.jetbrains.edu.learning.StudyUtils;
 import com.jetbrains.edu.learning.checker.StudyTaskChecker;
 import com.jetbrains.edu.learning.courseFormat.Course;
 import com.jetbrains.edu.learning.courseFormat.Lesson;
@@ -23,8 +24,8 @@ import com.jetbrains.edu.learning.courseFormat.tasks.PyCharmTask;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.courseGeneration.StudyGenerator;
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator;
-import com.jetbrains.edu.utils.EduIntellijUtils;
-import com.jetbrains.edu.utils.EduPluginConfiguratorBase;
+import com.jetbrains.edu.learning.intellij.EduIntellijUtils;
+import com.jetbrains.edu.learning.intellij.EduPluginConfiguratorBase;
 import org.jetbrains.android.sdk.AndroidSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +49,7 @@ public class EduKotlinAndroidPluginConfigurator extends EduKotlinPluginConfigura
 
   @Override
   public List<String> getBundledCoursePaths() {
-    File bundledCourseRoot = EduIntellijUtils.getBundledCourseRoot(DEFAULT_COURSE_PATH, EduKotlinAndroidPluginConfigurator.class);
+    File bundledCourseRoot = StudyUtils.getBundledCourseRoot(DEFAULT_COURSE_PATH, EduKotlinAndroidPluginConfigurator.class);
     return Collections.singletonList(FileUtil.join(bundledCourseRoot.getAbsolutePath(), DEFAULT_COURSE_PATH));
   }
 

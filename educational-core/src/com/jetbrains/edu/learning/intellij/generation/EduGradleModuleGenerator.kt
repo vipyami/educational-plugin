@@ -90,7 +90,7 @@ object EduGradleModuleGenerator {
         }
     }
 
-    private fun createGradleWrapper(moduleDirPath: String) {
+    fun createGradleWrapper(moduleDirPath: String) {
         try {
             val projectDirPath = File(FileUtil.toSystemDependentName(moduleDirPath))
             if (!EduUtils.isAndroidStudio()) {

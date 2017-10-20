@@ -1,6 +1,5 @@
 package com.jetbrains.edu.kotlin.android;
 
-import com.android.tools.idea.gradle.util.GradleWrapper;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -14,6 +13,7 @@ import com.intellij.platform.DirectoryProjectGenerator;
 import com.jetbrains.edu.learning.EduPluginConfigurator;
 import com.jetbrains.edu.learning.StudyUtils;
 import com.jetbrains.edu.learning.courseFormat.Course;
+import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator;
 import com.jetbrains.edu.learning.intellij.generation.EduProjectGenerator;
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator;
 import org.jetbrains.annotations.Nls;
@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.IOException;
 
 import static com.android.tools.idea.gradle.util.Projects.getBaseDirPath;
 
@@ -92,11 +91,7 @@ class EduKotlinAndroidCourseProjectGenerator implements EduCourseProjectGenerato
   @Override
   public void afterProjectGenerated(@NotNull Project project) {
     File projectPath = getBaseDirPath(project);
-    try {
-      GradleWrapper.create(projectPath);
-    } catch (IOException e) {
-      LOG.error(e);
-    }
+    EduGradleModuleGenerator.INSTANCE.createGradleWrapper(projectPath.getAbsolutePath());
 
     File gradlew = new File(projectPath, "gradlew");
     if (gradlew.exists() && !gradlew.canExecute()) {
