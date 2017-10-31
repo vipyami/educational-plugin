@@ -18,7 +18,7 @@ import com.jetbrains.edu.learning.intellij.generation.EduProjectGenerator
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator
 import java.io.File
 
-internal class EduKotlinAndroidCourseProjectGenerator(private val myCourse: Course) : EduCourseProjectGenerator<JdkProjectSettings> {
+internal class EduAndroidCourseProjectGenerator(private val myCourse: Course) : EduCourseProjectGenerator<JdkProjectSettings> {
 
   override fun generateProject(project: Project, baseDir: VirtualFile, settings: JdkProjectSettings, module: Module) {
     val generator = EduProjectGenerator()
@@ -56,6 +56,6 @@ internal class EduKotlinAndroidCourseProjectGenerator(private val myCourse: Cour
   }
 
   companion object {
-    private val LOG = Logger.getInstance(EduKotlinAndroidCourseProjectGenerator::class.java)
+    private val LOG = Logger.getInstance(EduAndroidCourseProjectGenerator::class.java)
   }
 }

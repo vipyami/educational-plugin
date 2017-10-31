@@ -25,13 +25,13 @@ import java.io.File
 import java.io.IOException
 import javax.swing.Icon
 
-class EduKotlinAndroidPluginConfigurator : EduKotlinPluginConfigurator() {
+class EduAndroidPluginConfigurator : EduKotlinPluginConfigurator() {
 
   override fun getPyCharmTaskChecker(pyCharmTask: PyCharmTask, project: Project): StudyTaskChecker<PyCharmTask> =
-          EduKotlinAndroidChecker(pyCharmTask, project)
+          EduAndroidChecker(pyCharmTask, project)
 
   override fun getBundledCoursePaths(): List<String> {
-    val bundledCourseRoot = StudyUtils.getBundledCourseRoot(DEFAULT_COURSE_PATH, EduKotlinAndroidPluginConfigurator::class.java)
+    val bundledCourseRoot = StudyUtils.getBundledCourseRoot(DEFAULT_COURSE_PATH, EduAndroidPluginConfigurator::class.java)
     return listOf(FileUtil.join(bundledCourseRoot.absolutePath, DEFAULT_COURSE_PATH))
   }
 
@@ -83,7 +83,7 @@ class EduKotlinAndroidPluginConfigurator : EduKotlinPluginConfigurator() {
   }
 
   override fun getEduCourseProjectGenerator(course: Course): EduCourseProjectGenerator<JdkProjectSettings>? =
-          EduKotlinAndroidCourseProjectGenerator(course)
+          EduAndroidCourseProjectGenerator(course)
 
   override fun getLogo(): Icon? = AndroidIcons.Android
 
@@ -91,6 +91,6 @@ class EduKotlinAndroidPluginConfigurator : EduKotlinPluginConfigurator() {
 
   companion object {
     private val DEFAULT_COURSE_PATH = "AndroidCourse.zip"
-    private val LOG = Logger.getInstance(EduKotlinAndroidPluginConfigurator::class.java)
+    private val LOG = Logger.getInstance(EduAndroidPluginConfigurator::class.java)
   }
 }
