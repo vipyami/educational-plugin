@@ -16,7 +16,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiManager;
-import com.intellij.util.PlatformUtils;
 import com.jetbrains.edu.learning.checker.PyStudyTaskChecker;
 import com.jetbrains.edu.learning.checker.StudyTaskChecker;
 import com.jetbrains.edu.learning.core.EduNames;
@@ -26,7 +25,6 @@ import com.jetbrains.edu.learning.courseFormat.tasks.PyCharmTask;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.courseFormat.tasks.TaskWithSubtasks;
 import com.jetbrains.edu.learning.courseGeneration.StudyGenerator;
-import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator;
 import com.jetbrains.python.PythonModuleTypeBase;
 import com.jetbrains.python.newProject.PyNewProjectSettings;
 import icons.PythonIcons;
@@ -39,7 +37,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-public class PyEduPluginConfigurator implements EduPluginConfigurator<PyNewProjectSettings> {
+public abstract class PyEduPluginConfigurator implements EduPluginConfigurator<PyNewProjectSettings> {
   public static final String PYTHON_3 = "3.x";
   public static final String PYTHON_2 = "2.x";
   private static final String TESTS_PY = "tests.py";
@@ -177,25 +175,6 @@ public class PyEduPluginConfigurator implements EduPluginConfigurator<PyNewProje
     return Collections.singletonList(FileUtil.join(bundledCourseRoot.getAbsolutePath(), COURSE_NAME));
   }
 
-  @NotNull
-  @Override
-  public LanguageSettings<PyNewProjectSettings> getLanguageSettings() {
-    if (isPyCharmOrCLion()) {
-      return new PyCharmPyLanguageSettings();
-    } else {
-      return new IDEAPyLanguageSettings();
-    }
-  }
-
-  @Override
-  public EduCourseProjectGenerator<PyNewProjectSettings> getEduCourseProjectGenerator(@NotNull Course course) {
-    if (isPyCharmOrCLion()) {
-      return new PyCharmPyDirectoryProjectGenerator(course);
-    } else {
-      return new IDEAPyDirectoryProjectGenerator(course);
-    }
-  }
-
   public ModuleType getModuleType() {
     return PythonModuleTypeBase.getInstance();
   }
@@ -223,9 +202,5 @@ public class PyEduPluginConfigurator implements EduPluginConfigurator<PyNewProje
   @Override
   public Icon getLogo() {
     return PythonIcons.Python.Python_logo;
-  }
-
-  private boolean isPyCharmOrCLion() {
-    return PlatformUtils.isPyCharm() || PlatformUtils.isCLion();
   }
 }
