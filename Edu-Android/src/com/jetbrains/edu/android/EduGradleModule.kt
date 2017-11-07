@@ -1,4 +1,4 @@
-package com.jetbrains.edu.learning.intellij.generation
+package com.jetbrains.edu.android
 
 import com.intellij.openapi.vfs.VirtualFile
 

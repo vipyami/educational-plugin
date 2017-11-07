@@ -1,4 +1,4 @@
-package com.jetbrains.edu.kotlin.android
+package com.jetbrains.edu.android.kotlin
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
@@ -18,7 +18,7 @@ import com.jetbrains.edu.learning.courseFormat.TaskFile
 import com.jetbrains.edu.learning.courseFormat.tasks.PyCharmTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
-import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator
+import com.jetbrains.edu.android.EduGradleModuleGenerator
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator
 import java.io.IOException
 

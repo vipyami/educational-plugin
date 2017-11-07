@@ -176,7 +176,7 @@ configure([project(':Edu-Python'), project(':Edu-Java'), project(':Edu-Kotlin')]
 }
 
 configure([project(':educational-core'), project(':Edu-Java')]) {
-    intellij.plugins 'junit', 'android'
+    intellij.plugins 'junit'
 }
 
 configure(project(':Edu-Kotlin')) {
@@ -198,7 +198,7 @@ configure(project(':Edu-Python')) {
 }
 
 configure(project(':Edu-Android')) {
-    intellij.plugins 'android'
+    intellij.plugins 'android', 'Kotlin'
 
     dependencies {
         compile project(':Edu-Kotlin')

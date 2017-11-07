@@ -1,4 +1,4 @@
-package com.jetbrains.edu.learning.intellij.generation
+package com.jetbrains.edu.android
 
 import com.android.SdkConstants
 import com.android.tools.idea.gradle.util.GradleWrapper
@@ -14,6 +14,7 @@ import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.courseGeneration.StudyGenerator
 import com.jetbrains.edu.learning.intellij.EduIntelliJNames
+import com.jetbrains.edu.learning.intellij.generation.EduModuleBuilderUtils
 import java.io.File
 import java.io.IOException
 
@@ -53,7 +54,7 @@ object EduGradleModuleGenerator {
     @Throws(IOException::class)
     fun createTaskModule(lessonDir: VirtualFile, task: Task) {
         val taskDirName = EduNames.TASK + task.index
-        val (src, test) = EduGradleModuleGenerator.createModule(lessonDir, taskDirName)
+        val (src, test) = createModule(lessonDir, taskDirName)
         for (taskFile in task.getTaskFiles().values) {
             StudyGenerator.createTaskFile(src, taskFile)
         }
@@ -81,7 +82,7 @@ object EduGradleModuleGenerator {
         if (utilFiles.isEmpty()) {
             return
         }
-        val (src, _) = EduGradleModuleGenerator.createModule(moduleDir, EduIntelliJNames.UTIL)
+        val (src, _) = createModule(moduleDir, EduIntelliJNames.UTIL)
         for ((key, value) in utilFiles) {
             StudyGenerator.createChildFile(src, PathUtil.getFileName(key), value)
         }

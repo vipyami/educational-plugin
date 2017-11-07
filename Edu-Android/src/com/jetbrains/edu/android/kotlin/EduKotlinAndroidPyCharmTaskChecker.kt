@@ -1,4 +1,4 @@
-package com.jetbrains.edu.kotlin.android
+package com.jetbrains.edu.android.kotlin
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
