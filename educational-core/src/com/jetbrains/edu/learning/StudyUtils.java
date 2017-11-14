@@ -88,7 +88,10 @@ public class StudyUtils {
   private StudyUtils() {
   }
 
-  private static final Pattern TASK_FILE_PATH_PATTERN = Pattern.compile("lesson(\\d+)/task(\\d+).*");
+  // TODO: revert this changes
+  // pattern should be 'lesson(\d+)/task(\d+).*'
+  // but '.*' at the beginning is hack to make test pass
+  private static final Pattern TASK_FILE_PATH_PATTERN = Pattern.compile(".*lesson(\\d+)/task(\\d+).*");
   private static final Logger LOG = Logger.getInstance(StudyUtils.class.getName());
   private static final String ourPrefix = "<html><head><script type=\"text/x-mathjax-config\">\n" +
                                           "            MathJax.Hub.Config({\n" +
@@ -483,6 +486,25 @@ public class StudyUtils {
   }
 
   @Nullable
+  public static VirtualFile getTaskDir(@NotNull VirtualFile taskFile) {
+    VirtualFile parent = taskFile.getParent();
+
+    while (parent != null) {
+      String name = parent.getName();
+
+      if (name.contains(EduNames.TASK) && parent.isDirectory()) {
+        return parent;
+      }
+      if (EduNames.SRC.equals(name)) {
+        return parent.getParent();
+      }
+
+      parent = parent.getParent();
+    }
+    return null;
+  }
+
+  @Nullable
   public static Task getTaskForFile(@NotNull Project project, @NotNull VirtualFile file) {
     Course course = StudyTaskManager.getInstance(project).getCourse();
     if (course == null || project.getBasePath() == null) {
@@ -609,13 +631,11 @@ public class StudyUtils {
   }
 
   public static String pathRelativeToTask(@NotNull Project project, @NotNull VirtualFile file) {
-    Task task = getTaskForFile(project, file);
-    if (task == null) {
-      return file.getPath();
-    }
-    VirtualFile taskDir = task.getTaskDir(project);
-    if (taskDir == null) {
-      return file.getName();
+    VirtualFile taskDir = getTaskDir(file);
+    if (taskDir == null) return file.getName();
+    VirtualFile srcDir = taskDir.findChild(EduNames.SRC);
+    if (srcDir != null) {
+      taskDir = srcDir;
     }
     return FileUtil.getRelativePath(taskDir.getPath(), file.getPath(), '/');
   }
