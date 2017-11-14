@@ -9,7 +9,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduPluginConfiguratorManager
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
-import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator
+import com.jetbrains.edu.kotlin.android.EduGradleModuleGenerator
 import com.jetbrains.edu.learning.intellij.generation.EduProjectGenerator
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator
 import java.io.File

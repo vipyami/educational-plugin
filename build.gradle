@@ -215,11 +215,11 @@ configure([project(':Edu-Python'), project(':Edu-Java'), project(':Edu-Kotlin')]
 }
 
 configure([project(':educational-core'), project(':Edu-Java')]) {
-    intellij.plugins 'junit', 'properties', 'android', 'gradle', 'Groovy', 'smali'
+    intellij.plugins 'junit'
 }
 
 configure(project(':Edu-Kotlin')) {
-    intellij.plugins 'junit', 'Kotlin'
+    intellij.plugins 'junit', 'Kotlin', 'properties', 'android', 'gradle', 'Groovy', 'smali'
 
 
     task createTwitterProperties() {
@@ -237,7 +237,7 @@ configure(project(':Edu-Python')) {
 }
 
 configure(project(':Edu-Android')) {
-    intellij.plugins 'android'
+    intellij.plugins 'properties', 'android', 'gradle', 'Groovy'
 
     dependencies {
         compile project(':Edu-Kotlin')

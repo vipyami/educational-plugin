@@ -1,4 +1,4 @@
-package com.jetbrains.edu.learning.intellij.generation
+package com.jetbrains.edu.kotlin.android
 
 import com.android.SdkConstants
 import com.android.tools.idea.gradle.util.GradleWrapper
@@ -18,7 +18,7 @@ import java.io.File
 import java.io.IOException
 
 object EduGradleModuleGenerator {
-    private val LOG = Logger.getInstance(EduModuleBuilderUtils::class.java)
+    private val LOG = Logger.getInstance(EduGradleModuleGenerator::class.java)
     private val FAILED_MESSAGE = "Failed to generate gradle wrapper"
     private val requestor = EduGradleModuleGenerator.javaClass
 
@@ -53,7 +53,7 @@ object EduGradleModuleGenerator {
     @Throws(IOException::class)
     fun createTaskModule(lessonDir: VirtualFile, task: Task) {
         val taskDirName = EduNames.TASK + task.index
-        val (src, test) = EduGradleModuleGenerator.createModule(lessonDir, taskDirName)
+        val (src, test) = createModule(lessonDir, taskDirName)
         for (taskFile in task.getTaskFiles().values) {
             StudyGenerator.createTaskFile(src, taskFile)
         }
@@ -81,7 +81,7 @@ object EduGradleModuleGenerator {
         if (utilFiles.isEmpty()) {
             return
         }
-        val (src, _) = EduGradleModuleGenerator.createModule(moduleDir, EduIntelliJNames.UTIL)
+        val (src, _) = createModule(moduleDir, EduIntelliJNames.UTIL)
         for ((key, value) in utilFiles) {
             StudyGenerator.createChildFile(src, PathUtil.getFileName(key), value)
         }
