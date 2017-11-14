@@ -1,16 +1,12 @@
 package com.jetbrains.edu.android
 
 import com.android.tools.idea.gradle.util.Projects.getBaseDirPath
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.DumbModePermission
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduPluginConfiguratorManager
-import com.jetbrains.edu.learning.StudyUtils
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
 import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator
@@ -34,13 +30,6 @@ internal class EduAndroidCourseProjectGenerator(private val myCourse: Course) : 
     }
     configurator.createCourseModuleContent(ModuleManager.getInstance(project).modifiableModel,
                     project, myCourse, project.basePath)
-    ApplicationManager.getApplication().invokeLater {
-      DumbService.allowStartingDumbModeInside(DumbModePermission.MAY_START_BACKGROUND) {
-        ApplicationManager.getApplication().runWriteAction {
-          StudyUtils.registerStudyToolWindow(myCourse, project)
-        }
-      }
-    }
   }
 
   override fun afterProjectGenerated(project: Project, settings: JdkProjectSettings) {
