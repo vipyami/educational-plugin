@@ -10,9 +10,9 @@
     </application-components>
 
     <extensions defaultExtensionNs="Educational">
-        <pluginConfigurator language="edu-android"
-                            implementationClass="com.jetbrains.edu.android.EduAndroidPluginConfigurator"/>
-        <checkListener implementation="com.jetbrains.edu.android.EduAndroidStudyCheckListener"/>
+        <!--<pluginConfigurator language="edu-android"-->
+                            <!--implementationClass="com.jetbrains.edu.android.EduAndroidPluginConfigurator"/>-->
+        <!--<checkListener implementation="com.jetbrains.edu.android.EduAndroidStudyCheckListener"/>-->
     </extensions>
 
     <actions>
