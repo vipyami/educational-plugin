@@ -16,7 +16,7 @@ import java.io.File
 
 internal class EduAndroidCourseProjectGenerator(private val myCourse: Course) : EduCourseProjectGenerator<JdkProjectSettings> {
 
-  override fun generateProject(project: Project, baseDir: VirtualFile, settings: JdkProjectSettings, module: Module) {
+  override fun generateProject(project: Project, baseDir: VirtualFile, settings: JdkProjectSettings?, module: Module) {
     val generator = EduProjectGenerator()
     generator.selectedCourse = myCourse
     generator.generateProject(project, project.baseDir)
