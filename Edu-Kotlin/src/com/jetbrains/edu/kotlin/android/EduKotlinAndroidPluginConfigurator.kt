@@ -18,7 +18,6 @@ import com.jetbrains.edu.learning.courseFormat.TaskFile
 import com.jetbrains.edu.learning.courseFormat.tasks.PyCharmTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
-import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator
 import com.jetbrains.edu.learning.newproject.EduCourseProjectGenerator
 import java.io.IOException
 

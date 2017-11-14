@@ -16,7 +16,6 @@ import com.jetbrains.edu.learning.courseFormat.RemoteCourse;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings;
 import com.jetbrains.edu.learning.intellij.generation.EduCourseModuleBuilder;
-import com.jetbrains.edu.learning.intellij.generation.EduGradleModuleGenerator;
 import com.jetbrains.edu.learning.intellij.generation.EduIntellijCourseProjectGeneratorBase;
 import com.jetbrains.edu.learning.stepic.EduStepicConnector;
 import org.jetbrains.annotations.NotNull;
