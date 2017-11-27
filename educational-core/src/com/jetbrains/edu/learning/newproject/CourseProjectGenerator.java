@@ -17,12 +17,15 @@ package com.jetbrains.edu.learning.newproject;
 
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.jetbrains.edu.learning.courseFormat.Course;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
 
@@ -35,6 +38,12 @@ public abstract class CourseProjectGenerator<S> implements DirectoryProjectGener
 
   public boolean beforeProjectGenerated() {
     return true;
+  }
+
+  @TestOnly
+  public final void generateTestProject(@NotNull Project project, @NotNull VirtualFile baseDir,
+                                        @NotNull S settings, @NotNull Module module) {
+    generateProject(project, baseDir, settings, module);
   }
 
   public void afterProjectGenerated(@NotNull Project project, @NotNull S projectSettings) {
