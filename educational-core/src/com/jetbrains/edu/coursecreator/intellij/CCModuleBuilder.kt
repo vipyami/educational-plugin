@@ -37,6 +37,7 @@ class CCModuleBuilder(private val myCourse: Course) : CourseModuleBuilder() {
     if (ApplicationManager.getApplication().isUnitTestMode) {
       createInitialStructure.run()
     } else {
+      // If we drop `registerPostStartupActivity` modules will not be created
       StartupManager.getInstance(project).registerPostStartupActivity(createInitialStructure)
     }
 
