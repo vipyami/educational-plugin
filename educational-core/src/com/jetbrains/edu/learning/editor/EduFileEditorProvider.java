@@ -20,7 +20,7 @@ public class EduFileEditorProvider implements FileEditorProvider, DumbAware {
   @Override
   public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
     TaskFile taskFile = EduUtils.getTaskFile(project, file);
-    return taskFile != null && !taskFile.isUserCreated() && TextEditorProvider.isTextFile(file);
+    return taskFile != null && !(EduUtils.isStudentProject(project) && taskFile.isUserCreated()) && TextEditorProvider.isTextFile(file);
   }
 
   @NotNull
