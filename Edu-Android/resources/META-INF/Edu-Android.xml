@@ -1,0 +1,19 @@
+<idea-plugin>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>org.jetbrains.android</depends>
+
+    <application-components>
+        <component>
+            <implementation-class>com.jetbrains.edu.android.AndroidApplicationComponent</implementation-class>
+        </component>
+    </application-components>
+
+    <extensions defaultExtensionNs="Educational">
+        <configurator language="edu-android" implementationClass="com.jetbrains.edu.android.AndroidConfigurator"/>
+        <!--<checkListener implementation="com.jetbrains.edu.android.EduKotlinStudyCheckListener"/>-->
+    </extensions>
+
+    <extensions defaultExtensionNs="educational">
+        <languageDecorator language="edu-android" implementationClass="com.jetbrains.edu.android.AndroidLanguageDecorator"/>
+    </extensions>
+</idea-plugin>

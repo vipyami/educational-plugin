@@ -15,7 +15,7 @@ import com.jetbrains.edu.learning.courseFormat.Course
 import java.awt.BorderLayout
 import javax.swing.JComponent
 
-internal class JdkLanguageSettings : EduCourseBuilder.LanguageSettings<JdkProjectSettings> {
+class JdkLanguageSettings : EduCourseBuilder.LanguageSettings<JdkProjectSettings> {
 
   private val myModel: ProjectSdksModel = ProjectStructureConfigurable.getInstance(ProjectManager.getInstance().defaultProject).projectJdksModel
   private var myJdkSettings: JdkProjectSettings = JdkProjectSettings(myModel, null)

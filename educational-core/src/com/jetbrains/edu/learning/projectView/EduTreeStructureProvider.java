@@ -52,6 +52,10 @@ public class EduTreeStructureProvider implements TreeStructureProvider, DumbAwar
   }
 
   protected boolean shouldModify(@NotNull final Project project) {
+    // temporarily disable modification of project view for android courses
+    // TODO: support project view modification for android projects
+    Course course = StudyTaskManager.getInstance(project).getCourse();
+    if (course != null && "edu-android".equals(course.getLanguageID())) return false;
     return EduUtils.isStudentProject(project);
   }
 }

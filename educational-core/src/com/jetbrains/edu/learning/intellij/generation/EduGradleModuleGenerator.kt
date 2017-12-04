@@ -86,9 +86,10 @@ object EduGradleModuleGenerator {
         }
     }
 
-    private fun createGradleWrapper(moduleDirPath: String) {
+    fun createGradleWrapper(moduleDirPath: String) {
         val projectDirPath = File(FileUtil.toSystemDependentName(moduleDirPath))
         GradleWrapper.create(projectDirPath)
+        File(projectDirPath, "gradlew").setExecutable(true)
     }
 
     @JvmStatic
@@ -102,7 +103,6 @@ object EduGradleModuleGenerator {
         }
 
         createGradleWrapper(moduleDirPath)
-        File(FileUtil.toSystemDependentName(project.basePath!!), "gradlew").setExecutable(true)
         GeneratorUtils.createFromInternalTemplate(project, moduleDir, SdkConstants.FN_BUILD_GRADLE)
         GeneratorUtils.createFromInternalTemplate(project, moduleDir, SdkConstants.FN_SETTINGS_GRADLE)
 
