@@ -74,6 +74,10 @@ public class CheckAction extends DumbAwareActionWithShortcut {
     for (CheckListener listener : Extensions.getExtensions(CheckListener.EP_NAME)) {
       listener.beforeCheck(project, task);
     }
+    TaskChecker taskChecker = task.getChecker(project);
+    if (!taskChecker.validateEnvironment()) {
+      return;
+    }
     ProgressManager.getInstance().run(new StudyCheckTask(project, task));
   }
 

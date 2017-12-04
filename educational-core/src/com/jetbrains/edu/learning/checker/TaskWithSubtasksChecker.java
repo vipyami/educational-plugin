@@ -31,6 +31,11 @@ public class TaskWithSubtasksChecker extends TaskChecker<TaskWithSubtasks> {
   }
 
   @Override
+  public boolean validateEnvironment() {
+    return myEduTaskChecker.validateEnvironment();
+  }
+
+  @Override
   public CheckResult check() {
     if (myEduTaskChecker != null) {
       return myEduTaskChecker.check();

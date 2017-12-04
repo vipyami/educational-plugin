@@ -26,6 +26,10 @@ public class TaskChecker<T extends Task> {
       .invokeLater(() -> CheckUtils.showTestResultPopUp(message, MessageType.ERROR.getPopupBackground(), myProject));
   }
 
+  public boolean validateEnvironment() {
+    return true;
+  }
+
   public CheckResult check()  {
     return new CheckResult(CheckStatus.Unchecked, "Check for " + myTask.getTaskType() + " task isn't available");
   }
