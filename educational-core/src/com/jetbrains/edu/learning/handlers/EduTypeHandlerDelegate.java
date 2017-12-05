@@ -46,12 +46,15 @@ public class EduTypeHandlerDelegate extends TypedHandlerDelegate {
   }
 
   @NotNull
-  private static Result handleTyping(Project project, Editor editor, PsiFile file, boolean showBaloon) {
+  private static Result handleTyping(Project project, Editor editor, PsiFile file, boolean showBalloon) {
     if (!EduUtils.isStudyProject(project)) {
       return Result.CONTINUE;
     }
     TaskFile taskFile = EduUtils.getTaskFile(project, file.getVirtualFile());
     if (taskFile == null || !(taskFile.getTask() instanceof TaskWithSubtasks)) {
+      return Result.CONTINUE;
+    }
+    if (taskFile.getAnswerPlaceholders().isEmpty()) {
       return Result.CONTINUE;
     }
     int offset = editor.getCaretModel().getOffset();
@@ -60,7 +63,7 @@ public class EduTypeHandlerDelegate extends TypedHandlerDelegate {
       if (placeholder == null || placeholder.isActive()) {
         return Result.CONTINUE;
       }
-      if (showBaloon) {
+      if (showBalloon) {
         Integer toSubtask = Collections.max(placeholder.getSubtaskInfos().keySet().stream()
                                               .filter(k -> k < ((TaskWithSubtasks)taskFile.getTask()).getActiveSubtaskIndex())
                                               .collect(Collectors.toList()));

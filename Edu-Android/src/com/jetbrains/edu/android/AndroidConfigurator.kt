@@ -23,9 +23,7 @@ class AndroidConfigurator : EduConfigurator<JdkProjectSettings> {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun getEduTaskChecker(task: EduTask, project: Project): TaskChecker<EduTask> {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
+  override fun getEduTaskChecker(task: EduTask, project: Project): TaskChecker<EduTask> = AndroidChecker(task, project)
 
   override fun getBundledCoursePaths(): List<String> {
     val bundledCourseRoot = EduUtils.getBundledCourseRoot(DEFAULT_COURSE_PATH, AndroidConfigurator::class.java)
