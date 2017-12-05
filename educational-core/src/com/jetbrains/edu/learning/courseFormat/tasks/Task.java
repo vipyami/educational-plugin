@@ -180,8 +180,15 @@ public abstract class Task implements StudyItem {
         if (taskDir == null) {
           return null;
         }
-        VirtualFile srcDir = taskDir.findChild(EduNames.SRC);
-        return srcDir != null ? srcDir : taskDir;
+
+        // Hack detected!!!
+        // TODO: rewrite it
+        if (!"edu-android".equals(getLesson().getCourse().getLanguageID())) {
+          VirtualFile srcDir = taskDir.findChild(EduNames.SRC);
+          return srcDir != null ? srcDir : taskDir;
+        } else {
+          return taskDir;
+        }
       }
     }
     return null;

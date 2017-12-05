@@ -15,9 +15,7 @@ class AndroidConfigurator : EduConfigurator<JdkProjectSettings> {
 
   override fun getCourseBuilder(): EduCourseBuilder<JdkProjectSettings> = myCourseBuilder
 
-  override fun getTestFileName(): String {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
+  override fun getTestFileName(): String = BASE_TEST_FILE_NAME
 
   override fun excludeFromArchive(name: String): Boolean {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -32,5 +30,6 @@ class AndroidConfigurator : EduConfigurator<JdkProjectSettings> {
 
   companion object {
     private const val DEFAULT_COURSE_PATH = "NewAndroidCourse.zip"
+    private const val BASE_TEST_FILE_NAME = "Tests.kt"
   }
 }
