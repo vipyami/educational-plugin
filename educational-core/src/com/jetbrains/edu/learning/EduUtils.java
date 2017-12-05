@@ -299,7 +299,7 @@ public class EduUtils {
           return null;
         }
         final Task task = tasks.get(taskIndex);
-        return task.getFile(pathRelativeToTask(file));
+        return task.getFile(pathRelativeToTask(project, file));
       }
     }
     return null;
@@ -637,12 +637,19 @@ public class EduUtils {
     return null;
   }
 
-  public static String pathRelativeToTask(VirtualFile file) {
+  public static String pathRelativeToTask(@NotNull final Project project, @NotNull final VirtualFile file) {
     VirtualFile taskDir = getTaskDir(file);
     if (taskDir == null) return file.getName();
-    VirtualFile srcDir = taskDir.findChild(EduNames.SRC);
-    if (srcDir != null) {
-      taskDir = srcDir;
+
+    Course course = StudyTaskManager.getInstance(project).getCourse();
+    assert course != null;
+    // It's very hacky
+    // TODO: implement more graceful solution
+    if (!"edu-android".equals(course.getLanguageID())) {
+      VirtualFile srcDir = taskDir.findChild(EduNames.SRC);
+      if (srcDir != null) {
+        taskDir = srcDir;
+      }
     }
     return FileUtil.getRelativePath(taskDir.getPath(), file.getPath(), '/');
   }
@@ -857,7 +864,7 @@ public class EduUtils {
         }
         task = task.copy();
       }
-      TaskFile taskFile = task.getTaskFile(pathRelativeToTask(answerFile));
+      TaskFile taskFile = task.getTaskFile(pathRelativeToTask(project, answerFile));
       if (taskFile == null) {
         return null;
       }
