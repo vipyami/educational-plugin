@@ -382,7 +382,7 @@ public class EduProjectComponent implements ProjectComponent {
     @Override
     public void fileCreated(@NotNull VirtualFileEvent event) {
       if (myProject.isDisposed()) return;
-      if (EduUtils.isStudentProject(myProject)) return;
+      if (!EduUtils.isStudentProject(myProject)) return;
       final VirtualFile createdFile = event.getFile();
       final Task task = EduUtils.getTaskForFile(myProject, createdFile);
       if (task == null) return;
