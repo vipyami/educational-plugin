@@ -97,7 +97,7 @@ public class CCPushTask extends DumbAwareAction {
           CCStepikConnector.postTask(project, task, lesson.getId());
         }
         else {
-          CCStepikConnector.updateTask(project, task);
+          CCStepikConnector.updateTask(project, task, true);
         }
       }
     });

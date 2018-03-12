@@ -47,6 +47,8 @@ public class Lesson extends StudyItem {
   @Transient
   private Course myCourse = null;
 
+  public int unitId = 0;
+
   @Transient
   private Section mySection = null;
 

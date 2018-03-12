@@ -87,9 +87,9 @@ public class CCPushLesson extends DumbAwareAction {
       public void run(@NotNull ProgressIndicator indicator) {
         indicator.setText("Uploading lesson to " + StepikNames.STEPIK_URL);
         if (lesson.getId() > 0) {
-          int lessonId = CCStepikConnector.updateLesson(project, lesson);
+          int lessonId = CCStepikConnector.updateLesson(project, lesson, true);
           if (lessonId != -1) {
-            CCStepikConnector.showNotification(project, "Lesson updated");
+            CCStepikConnector.showNotification(project, "Lesson updated", null, null);
           }
         }
         else {

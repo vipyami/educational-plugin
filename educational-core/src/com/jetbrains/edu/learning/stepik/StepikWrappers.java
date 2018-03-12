@@ -177,7 +177,7 @@ public class StepikWrappers {
     }
   }
 
-  static class LessonContainer {
+  public static class LessonContainer {
     List<Lesson> lessons;
   }
 
@@ -252,9 +252,8 @@ public class StepikWrappers {
     }
   }
 
-  static class UnitContainer {
-
-    List<Unit> units;
+  public static class UnitContainer {
+    public List<Unit> units;
   }
 
   public static class UnitWrapper {
