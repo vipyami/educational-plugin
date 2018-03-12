@@ -6,11 +6,15 @@ import com.google.gson.GsonBuilder;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtensionPoint;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
@@ -23,6 +27,7 @@ import com.jetbrains.edu.learning.*;
 import com.jetbrains.edu.learning.courseFormat.*;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.courseFormat.tasks.TaskWithSubtasks;
+import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils;
 import org.apache.http.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -43,6 +48,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.builtInWebServer.BuiltInServerOptions;
 import org.jetbrains.ide.BuiltInServerManager;
 
+import javax.swing.event.HyperlinkEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +60,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.jetbrains.edu.learning.EduUtils.synchronize;
 import static com.jetbrains.edu.learning.stepik.StepikWrappers.*;
 
 public class StepikConnector {
@@ -132,18 +139,193 @@ public class StepikConnector {
   }
 
   public static Date getCourseUpdateDate(final int courseId) {
-    final String url = StepikNames.COURSES + "/" + courseId;
+    RemoteCourse course = null;
     try {
-      final List<RemoteCourse> courses = StepikClient.getFromStepik(url, CoursesContainer.class).courses;
-      if (!courses.isEmpty()) {
-        return courses.get(0).getUpdateDate();
+      course = getCourseFromStepik(EduSettings.getInstance().getUser(), courseId, true);
+    }
+    catch (IOException e) {
+      LOG.warn(e.getMessage());
+    }
+    return course == null ? null : course.getUpdateDate();
+  }
+
+  public static void updateCourseIfNeeded(@NotNull Project project, @NotNull RemoteCourse course) {
+    int id = course.getId();
+
+    if (id == 0) {
+      return;
+    }
+
+    if (!course.isStudy()) {
+      return;
+    }
+
+    ProgressManager.getInstance().runProcessWithProgressAsynchronously(new Backgroundable(null, "Updating Course") {
+      @Override
+      public void run(@NotNull ProgressIndicator indicator) {
+        if (!course.isUpToDate()) {
+          showUpdateAvailableNotification(project, course);
+        }
+      }
+    }, new EmptyProgressIndicator());
+  }
+
+  private static void showUpdateAvailableNotification(@NotNull Project project, @NotNull Course course) {
+    final Notification notification =
+      new Notification("Update.course", "Course Updates", "Course is ready to <a href=\"update\">update</a>", NotificationType.INFORMATION,
+                       new NotificationListener() {
+                         @Override
+                         public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
+                           FileEditorManagerEx.getInstanceEx(project).closeAllFiles();
+
+                           ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
+                             ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
+                             updateCourse(project);
+                           }, "Updating Course", true, project);
+                           synchronize();
+                           final Notification updateNotification =
+                             new Notification("Update.course", "Course update", "Current course is synchronized", NotificationType.INFORMATION);
+                           updateNotification.notify(project);
+                           course.setUpdated();
+                         }
+                       });
+    notification.notify(project);
+  }
+
+  private static void updateCourse(@NotNull Project project) {
+    final Course currentCourse = StudyTaskManager.getInstance(project).getCourse();
+    if (!(currentCourse instanceof RemoteCourse)) return;
+    Course courseFromServer = courseFromServer(project, (RemoteCourse)currentCourse);
+
+    if (courseFromServer == null) return;
+    courseFromServer.initCourse(false);
+
+    EduConfigurator configurator = EduConfiguratorManager.forLanguage(courseFromServer.getLanguageById());
+    if (configurator == null) {
+      LOG.info("EduConfigurator not found for language " + courseFromServer.getLanguageById().getDisplayName());
+      return;
+    }
+
+    final ArrayList<Lesson> updatedLessons = new ArrayList<>();
+
+    int lessonIndex = 0;
+    HashMap<Integer, VirtualFile> oldLessonDirectories = new HashMap<>();
+    for (Lesson lesson : courseFromServer.getLessons(true)) {
+      lessonIndex += 1;
+      final String lessonDirName = EduNames.LESSON + String.valueOf(lessonIndex);
+      final VirtualFile baseDir = project.getBaseDir();
+      final VirtualFile lessonDir = baseDir.findChild(lessonDirName);
+
+      Lesson currentLesson = currentCourse.getLesson(lesson.getId());
+      if (currentLesson == null) {
+        if (lessonDir != null) {
+          saveOldDirectory(currentCourse, oldLessonDirectories, lessonDirName, lessonDir);
+        }
+
+        lesson.setIndex(lessonIndex);
+        lesson.initLesson(currentCourse, false);
+        try {
+          GeneratorUtils.createLesson(lesson, baseDir);
+          updatedLessons.add(lesson);
+          continue;
+        }
+        catch (IOException e) {
+          LOG.warn(e.getMessage());
+        }
+        for (int i = 1; i <= lesson.getTaskList().size(); i++) {
+          Task task = lesson.getTaskList().get(i - 1);
+          task.setIndex(i);
+        }
+        updatedLessons.add(lesson);
+      }
+
+      if (currentLesson != null) {
+        if (currentLesson.getIndex() != lessonIndex) {
+          if (oldLessonDirectories.containsKey(currentLesson.getId())) {
+            if (lessonDir != null) {
+              saveOldDirectory(currentCourse, oldLessonDirectories, lessonDirName, lessonDir);
+            }
+            ApplicationManager.getApplication().invokeAndWait(() -> ApplicationManager.getApplication().runWriteAction(() -> {
+              try {
+                oldLessonDirectories.get(currentLesson.getId()).rename(currentLesson, lessonDirName);
+              }
+              catch (IOException e) {
+                LOG.warn(e.getMessage());
+              }
+            }));
+          }
+          currentLesson.setIndex(lessonIndex);
+        }
+        updatedLessons.add(currentLesson);
+      }
+
+      int index = 0;
+      final ArrayList<Task> tasks = new ArrayList<>();
+      Lesson lessonToUpdate = updatedLessons.get(updatedLessons.size() - 1);
+      for (Task task : lesson.getTaskList()) {
+        index += 1;
+        final Task studentTask = lessonToUpdate.getTask(task.getStepId());
+        if (studentTask != null && CheckStatus.Solved.equals(studentTask.getStatus())) {
+          studentTask.setIndex(index);
+          tasks.add(studentTask);
+          continue;
+        }
+        if (studentTask != null && studentTask.isUpToDate()) {
+          tasks.add(studentTask);
+          continue;
+        }
+        task.initTask(currentLesson, false);
+        task.setIndex(index);
+
+        final String taskDirName = EduNames.TASK + String.valueOf(index);
+        final VirtualFile taskDir = lessonDir.findChild(taskDirName);
+
+        tasks.add(task);
+
+        // TODO: update task files
+        if (taskDir != null) continue;
+        try {
+          GeneratorUtils.createTask(task, lessonDir);
+        }
+        catch (IOException e) {
+          LOG.error("Failed to create task");
+        }
+      }
+      lessonToUpdate.updateTaskList(tasks);
+    }
+    currentCourse.setLessons(updatedLessons);
+  }
+
+  private static void saveOldDirectory(Course currentCourse,
+                                       HashMap<Integer, VirtualFile> oldLessonDirectories,
+                                       String lessonDirName, VirtualFile lessonDir) {
+    int index = EduUtils.getIndex(lessonDir.getName(), EduNames.LESSON);
+    Lesson lessonForDirectory = currentCourse.getLessons().get(index);
+
+      ApplicationManager.getApplication().invokeAndWait(() -> ApplicationManager.getApplication().runWriteAction(() -> {
+        try {
+        lessonDir.rename(lessonForDirectory, "old_" + lessonDirName);
+        oldLessonDirectories.put(lessonForDirectory.getId(), lessonDir);
+        }
+        catch (IOException e) {
+          LOG.warn(e.getMessage());
+        }
+      }));
+  }
+
+  @Nullable
+  private static Course courseFromServer(@NotNull Project project, RemoteCourse currentCourse) {
+    Course course = null;
+    try {
+      RemoteCourse remoteCourse = getCourseFromStepik(EduSettings.getInstance().getUser(), currentCourse.getId(), true);
+      if (remoteCourse != null) {
+        course = getCourse(project, remoteCourse);
       }
     }
     catch (IOException e) {
-      LOG.warn("Could not retrieve course with id=" + courseId);
+      LOG.warn(e.getMessage());
     }
-
-    return null;
+    return course;
   }
 
   public static Date getLessonUpdateDate(final int lessonId) {
