@@ -20,7 +20,6 @@ public class RemoteCourse extends Course {
   List<Integer> instructors = new ArrayList<>();
   @Expose private int id;
   @Expose @SerializedName("update_date") private Date myUpdateDate;
-  private Boolean isUpToDate = true;
   @Expose private boolean isAdaptive = false;
   @Expose @SerializedName("is_public") boolean isPublic;
   @Expose private boolean myLoadSolutions = true; // disabled for reset courses
@@ -86,7 +85,7 @@ public class RemoteCourse extends Course {
       }
     }, new EmptyProgressIndicator());
 
-    return isUpToDate;
+    return true;
   }
 
   @Override

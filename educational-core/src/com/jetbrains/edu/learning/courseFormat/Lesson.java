@@ -14,7 +14,6 @@ import com.jetbrains.edu.learning.stepik.StepikNames;
 import kotlin.collections.CollectionsKt;
 import one.util.streamex.StreamEx;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -143,13 +142,15 @@ public class Lesson extends StudyItem {
 
   public boolean isUpToDate() {
     if (myId == 0) return true;
-    final Date date = StepikConnector.getLessonUpdateDate(myId);
-    if (date == null) return true;
+    Lesson lessonInfo = StepikConnector.getLessonFromServer(myId);
+    if (lessonInfo == null) return true;
+    if (lessonInfo.myUpdateDate == null) return true;
     if (myUpdateDate == null) return false;
+    if (lessonInfo.steps.size() != taskList.size()) return false;
     for (Task task : taskList) {
       if (!task.isUpToDate()) return false;
     }
-    return !date.after(myUpdateDate);
+    return !lessonInfo.myUpdateDate.after(myUpdateDate);
   }
 
   public boolean isAdditional() {
