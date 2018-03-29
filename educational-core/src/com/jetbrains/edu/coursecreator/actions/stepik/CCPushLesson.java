@@ -89,7 +89,7 @@ public class CCPushLesson extends DumbAwareAction {
         if (lesson.getId() > 0) {
           int lessonId = CCStepikConnector.updateLesson(project, lesson, true);
           if (lessonId != -1) {
-            CCStepikConnector.showNotification(project, "Lesson updated", null, null);
+            CCStepikConnector.showNotification(project, "Lesson updated", "Lesson updated", null, null);
           }
         }
         else {

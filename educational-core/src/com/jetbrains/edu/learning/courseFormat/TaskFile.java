@@ -15,6 +15,7 @@ import org.jetbrains.annotations.SystemIndependent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of task file which contains task windows for student to type in and
@@ -186,5 +187,33 @@ public class TaskFile {
     } else {
       return sourceDir + VfsUtilCore.VFS_SEPARATOR_CHAR + name;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TaskFile)) return false;
+    TaskFile file = (TaskFile)o;
+
+    List<AnswerPlaceholder> placeholders = getAnswerPlaceholders();
+    List<AnswerPlaceholder> otherPlaceholders = file.getAnswerPlaceholders();
+    if (placeholders.size() != otherPlaceholders.size()) {
+      return false;
+    }
+
+    for (int i = 0; i < placeholders.size(); i++) {
+      if (!placeholders.get(i).equals(otherPlaceholders.get(i))) {
+        return false;
+      }
+    }
+
+    return getIndex() == file.getIndex() &&
+           Objects.equals(name, file.name) &&
+           Objects.equals(text, file.text);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, text, getIndex());
   }
 }

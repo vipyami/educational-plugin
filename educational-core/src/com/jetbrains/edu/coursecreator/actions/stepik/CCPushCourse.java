@@ -1,23 +1,19 @@
 package com.jetbrains.edu.coursecreator.actions.stepik;
 
-import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.IdeView;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.edu.coursecreator.CCUtils;
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector;
+import com.jetbrains.edu.coursecreator.stepik.StepikCourseUploader;
 import com.jetbrains.edu.learning.StudyTaskManager;
 import com.jetbrains.edu.learning.courseFormat.Course;
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse;
 import com.jetbrains.edu.learning.statistics.EduUsagesCollector;
-import com.jetbrains.edu.learning.stepik.StepikNames;
 import org.jetbrains.annotations.NotNull;
 
 public class CCPushCourse extends DumbAwareAction {
@@ -50,15 +46,7 @@ public class CCPushCourse extends DumbAwareAction {
       return;
     }
     if (course instanceof RemoteCourse) {
-      ProgressManager.getInstance().run(new Task.Modal(project, "Updating Course", true) {
-        @Override
-        public void run(@NotNull ProgressIndicator indicator) {
-          indicator.setIndeterminate(false);
-          CCStepikConnector.updateCourse(project, (RemoteCourse) course);
-          CCStepikConnector.showNotification(project, "Course updated", "See on Stepik", () -> BrowserUtil
-            .browse(StepikNames.STEPIK_URL + "/course/" + ((RemoteCourse)course).getId()));
-        }
-      });
+      new StepikCourseUploader(project).uploadWithProgress(true);
     }
     else {
       CCStepikConnector.postCourseWithProgress(project, course);
