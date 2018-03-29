@@ -55,6 +55,8 @@ public class StudyTaskManager implements PersistentStateComponent<Element>, Dumb
 
   @Transient private final Project myProject;
 
+  public RemoteCourse latestCourseFromServer;
+
   public StudyTaskManager(Project project) {
     myProject = project;
   }

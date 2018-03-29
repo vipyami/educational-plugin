@@ -132,6 +132,10 @@ public class Lesson extends StudyItem {
     this.is_public = isPublic;
   }
 
+  public boolean isPublic() {
+    return is_public;
+  }
+
   public boolean isUpToDate() {
     if (myId == 0) return true;
     final Date date = StepikConnector.getLessonUpdateDate(myId);

@@ -20,12 +20,11 @@ import java.net.URISyntaxException
 import java.util.*
 import kotlin.collections.ArrayList
 
-class StepikCourseUpdater(val course: RemoteCourse, val project: Project) {
+class StepikCourseUpdater(private val course: RemoteCourse, private val project: Project) {
   private val LOG = Logger.getInstance(this.javaClass)
 
   private val oldLessonDirectories = HashMap<Int, VirtualFile>()
 
-  @Throws(IOException::class, URISyntaxException::class)
   fun updateCourse() {
     oldLessonDirectories.clear()
     val courseFromServer = courseFromServer(project, course)

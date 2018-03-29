@@ -12,10 +12,7 @@ import com.jetbrains.edu.learning.courseFormat.tasks.TaskWithSubtasks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implementation of windows which user should type in
@@ -324,5 +321,22 @@ public class AnswerPlaceholder {
     if (placeholderDependency != null) {
       myPlaceholderDependency.setAnswerPlaceholder(this);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof AnswerPlaceholder)) return false;
+    AnswerPlaceholder that = (AnswerPlaceholder)o;
+    return getOffset() == that.getOffset() &&
+           getLength() == that.getLength() &&
+           getIndex() == that.getIndex() &&
+           Objects.equals(getInitialState(), that.getInitialState());
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects.hash(getOffset(), getLength(), getIndex(), getInitialState());
   }
 }

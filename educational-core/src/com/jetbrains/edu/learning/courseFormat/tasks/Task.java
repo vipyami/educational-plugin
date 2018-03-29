@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementation of task which contains task files, tests, input file for tests
@@ -217,32 +218,6 @@ public abstract class Task extends StudyItem {
     return FileUtil.getNameWithoutExtension(EduNames.TASK_HTML);
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    Task task = (Task)o;
-
-    if (getIndex() != task.getIndex()) return false;
-    if (name != null ? !name.equals(task.name) : task.name != null) return false;
-    if (taskFiles != null ? !taskFiles.equals(task.taskFiles) : task.taskFiles != null) return false;
-    if (taskTexts != null ? !taskTexts.equals(task.taskTexts) : task.taskTexts != null) return false;
-    if (testsText != null ? !testsText.equals(task.testsText) : task.testsText != null) return false;
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = name != null ? name.hashCode() : 0;
-    result = 31 * result + getIndex();
-    result = 31 * result + (taskFiles != null ? taskFiles.hashCode() : 0);
-    result = 31 * result + (taskTexts != null ? taskTexts.hashCode() : 0);
-    result = 31 * result + (testsText != null ? testsText.hashCode() : 0);
-    return result;
-  }
-
   public void setStepId(int stepId) {
     myStepId = stepId;
   }
@@ -333,5 +308,63 @@ public abstract class Task extends StudyItem {
       return EducationalCoreIcons.Task;
     }
     return myStatus == CheckStatus.Solved ? EducationalCoreIcons.TaskSolved : EducationalCoreIcons.TaskFailed;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (!(other instanceof Task)) return false;
+    Task task = (Task)other;
+
+    Map<String, String> otherTexts = ((Task)other).taskTexts;
+    for (Map.Entry<String, String> entry : taskTexts.entrySet()) {
+      String name = entry.getKey();
+      String text = entry.getValue();
+      if (!otherTexts.containsKey(name)) {
+        return false;
+      }
+
+      if (!text.equals(otherTexts.get(name))) {
+        return false;
+      }
+    }
+
+    Map<String, TaskFile> otherTaskFiles = task.taskFiles;
+    for (Map.Entry<String, TaskFile> entry : taskFiles.entrySet()) {
+      String name = entry.getKey();
+      TaskFile taskFile = entry.getValue();
+
+      if (!otherTaskFiles.containsKey(name)) {
+        return false;
+      }
+
+      if (!taskFile.equals(otherTaskFiles.get(name))) {
+        return false;
+      }
+    }
+
+    Map<String, String> otherAdditionalFiles = task.getAdditionalFiles();
+    for (Map.Entry<String, String> entry : additionalFiles.entrySet()) {
+      String name = entry.getKey();
+      String text = entry.getValue();
+
+      if (!otherAdditionalFiles.containsKey(name)) {
+        return false;
+      }
+
+      if (!text.equals(otherAdditionalFiles.get(name))) {
+        return false;
+      }
+    }
+
+    return getIndex() == task.getIndex() &&
+           Objects.equals(getName(), task.getName());
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects
+      .hash(getName(), getIndex(), getLesson());
   }
 }
