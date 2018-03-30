@@ -1,10 +1,13 @@
 package com.jetbrains.edu.coursecreator.stepik
 
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.application.invokeAndWaitIfNeed
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postUnit
+import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.updateAdditionalMaterials
 import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
@@ -12,16 +15,18 @@ import com.jetbrains.edu.learning.courseFormat.RemoteCourse
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.stepik.StepikNames
 
-class StepikCourseLoader(private val course: RemoteCourse, private val project: Project) {
+class StepikCourseLoader(private val project: Project) {
   private var isCourseInfoChanged = false
   private var newLessons: List<Lesson> = ArrayList()
   private var lessonsInfoToUpdate: List<Lesson>
   private var lessonsToUpdate: List<Lesson>
   private val tasksToUpdateByLessonIndex: Map<Int, List<Task>>
   private val tasksToPostByLessonIndex: Map<Int, List<Task>>
+  private val course: RemoteCourse
 
   init {
     val courseFromServer = StudyTaskManager.getInstance(project).latestCourseFromServer
+    course = StudyTaskManager.getInstance(project).course as RemoteCourse
 
     isCourseInfoChanged = courseInfoChanged(courseFromServer)
 
@@ -34,9 +39,7 @@ class StepikCourseLoader(private val course: RemoteCourse, private val project: 
     tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index }, { newTasks(courseFromServer, it) }).filterValues { !it.isEmpty() }
     tasksToUpdateByLessonIndex = updateCandidates.associateBy({ it.index },
                                                               { tasksToUpdate(courseFromServer, it) }).filterValues { !it.isEmpty() }
-    lessonsToUpdate = updateCandidates.filter {
-      tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index)
-    }
+    lessonsToUpdate = updateCandidates.filter { tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index) }
   }
 
   private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
@@ -61,12 +64,17 @@ class StepikCourseLoader(private val course: RemoteCourse, private val project: 
     ProgressManager.getInstance().run(object : com.intellij.openapi.progress.Task.Modal(project, "Updating Course", false) {
       override fun run(progressIndicator: ProgressIndicator) {
         progressIndicator.isIndeterminate = true
+        var postedCourse: RemoteCourse? = null
         if (isCourseInfoChanged) {
           progressIndicator.text = "Updating course info"
-          CCStepikConnector.updateCourseInfo(project, course)
+          postedCourse = CCStepikConnector.updateCourseInfo(project, course)
         }
 
         if (!newLessons.isEmpty()) {
+          if (!isCourseInfoChanged) {
+            // it's updating course update date that is used in student project to check if there are new lessons
+            postedCourse = CCStepikConnector.updateCourseInfo(project, course)
+          }
           uploadLessons(progressIndicator)
         }
 
@@ -78,14 +86,9 @@ class StepikCourseLoader(private val course: RemoteCourse, private val project: 
           updateTasks(progressIndicator)
         }
 
-        val postedCourse = StudyTaskManager.getInstance(project).course as RemoteCourse
+        updateAdditionalMaterials(postedCourse)
 
-//        val courseInfo = getCourseInfo(course.id.toString())
-//        if (!CCStepikConnector.updateAdditionalMaterials(project, course, courseInfo!!.sections)) {
-//          CCStepikConnector.postAdditionalFiles(course, project, course.id)
-//        }
-
-        StudyTaskManager.getInstance(project).latestCourseFromServer = postedCourse.copy() as RemoteCourse?
+        StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(project).course!!.copy() as RemoteCourse?
         if (showNotification) {
           val message = StringBuilder()
           if (!newLessons.isEmpty()) {
@@ -103,6 +106,15 @@ class StepikCourseLoader(private val course: RemoteCourse, private val project: 
         }
       }
     })
+  }
+
+  private fun updateAdditionalMaterials(postedCourse: RemoteCourse?) {
+    val courseFromServer = postedCourse ?: CCStepikConnector.getCourseInfo(course.id.toString())
+    invokeAndWaitIfNeed { FileDocumentManager.getInstance().saveAllDocuments() }
+    val sectionIds = courseFromServer!!.sectionIds
+    if (!updateAdditionalMaterials(project, course, sectionIds)) {
+      CCStepikConnector.postAdditionalFiles(course, project, course.id, sectionIds.size)
+    }
   }
 
   private fun updateTasks(progressIndicator: ProgressIndicator) {
@@ -175,7 +187,7 @@ class StepikCourseLoader(private val course: RemoteCourse, private val project: 
       }
       progressIndicator.text = "Posting lesson: ${lesson.name}"
       CCStepikConnector.postLesson(project, lesson)
-      val sections = course.sections
+      val sections = course.sectionIds
       val sectionId = sections[sections.size - 1]
       val unitId = postUnit(lesson.id, lesson.index, sectionId, project)
       if (unitId != -1) {

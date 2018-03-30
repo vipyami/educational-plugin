@@ -21,14 +21,6 @@ import com.jetbrains.edu.learning.EduConfiguratorManager;
 import com.jetbrains.edu.learning.EduSettings;
 import com.jetbrains.edu.learning.StudyTaskManager;
 import com.jetbrains.edu.learning.courseFormat.*;
-import com.jetbrains.edu.learning.EduConfigurator;
-import com.jetbrains.edu.learning.EduConfiguratorManager;
-import com.jetbrains.edu.learning.EduSettings;
-import com.jetbrains.edu.learning.StudyTaskManager;
-import com.jetbrains.edu.learning.courseFormat.AnswerPlaceholder;
-import com.jetbrains.edu.learning.courseFormat.Course;
-import com.jetbrains.edu.learning.courseFormat.Lesson;
-import com.jetbrains.edu.learning.courseFormat.RemoteCourse;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.stepik.*;
 import com.jetbrains.edu.learning.stepik.serialization.StepikSubmissionAnswerPlaceholderAdapter;
@@ -147,7 +139,7 @@ public class CCStepikConnector {
       ApplicationManager.getApplication().runReadAction(() -> postAdditionalFiles(course, project, courseOnRemote.getId(), finalSectionCount + 1));
       StudyTaskManager.getInstance(project).setCourse(courseOnRemote);
       StudyTaskManager.getInstance(project).latestCourseFromServer = (RemoteCourse)courseOnRemote.copy();
-      showNotification(project, "Course published", "See on Stepik", () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + courseOnRemote.getId()));
+      showNotification(project, "Course published", "","See on Stepik", () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + courseOnRemote.getId()));
     }
     catch (IOException e) {
       LOG.error(e.getMessage());
@@ -203,6 +195,7 @@ public class CCStepikConnector {
     section.setPosition(1);
 
     final int sectionId = postModule(course.getId(), section, project);
+    course.setSectionIds(Collections.singletonList(sectionId));
     int position = 1;
     for (Lesson lesson : course.getLessons()) {
       if (indicator != null) {
@@ -213,7 +206,7 @@ public class CCStepikConnector {
       int unitId = postUnit(lessonId, position, sectionId, project);
       if (unitId != -1) {
         lesson.unitId = unitId;
-      };
+      }
       if (indicator != null) {
         indicator.setFraction((double)lesson.getIndex() / course.getLessons().size());
         indicator.checkCanceled();
@@ -263,11 +256,11 @@ public class CCStepikConnector {
       section.setPosition(position);
       final int sectionId = postModule(id, section, project);
       final int lessonId = postLesson(project, lesson);
-      postUnit(lessonId, 1, sectionId, project);
+      lesson.unitId = postUnit(lessonId, position, sectionId, project);
     }
   }
 
-  public static void updateAdditionalFiles(Course course, @NotNull final Project project, int stepikId) {
+  public static void updateAdditionalFiles(Course course, @NotNull final Project project, int stepikId, Integer sectionId) {
     final Lesson lesson = CCUtils.createAdditionalLesson(course, project, StepikNames.PYCHARM_ADDITIONAL);
     if (lesson != null) {
       lesson.setId(stepikId);
@@ -275,7 +268,7 @@ public class CCStepikConnector {
       if (indicator != null) {
         indicator.setText2("Publishing additional files");
       }
-      updateLesson(project, lesson, false);
+      updateLesson(project, lesson, sectionId, false);
     }
   }
 
@@ -474,14 +467,6 @@ public class CCStepikConnector {
         showErrorNotification(project, FAILED_TITLE, responseString);
       }
       return new Gson().fromJson(responseString, StepikWrappers.CoursesContainer.class).courses.get(0);
-      //move to course update
-      //final RemoteCourse postedCourse = new Gson().fromJson(responseString, StepikWrappers.CoursesContainer.class).courses.get(0);
-      //updateLessons(course, project);
-      //ApplicationManager.getApplication().invokeAndWait(() -> FileDocumentManager.getInstance().saveAllDocuments());
-      //final List<Integer> sectionIds = postedCourse.getSectionIds();
-      //if (!updateAdditionalMaterials(project, course, sectionIds)) {
-      //  postAdditionalFiles(course, project, course.getId(), sectionIds.size());
-      //}
     }
     catch (IOException e) {
       LOG.error(e.getMessage());
@@ -491,7 +476,7 @@ public class CCStepikConnector {
     return null;
   }
 
-  private static boolean updateAdditionalMaterials(@NotNull Project project, @NotNull final RemoteCourse course,
+  public static boolean updateAdditionalMaterials(@NotNull Project project, @NotNull final RemoteCourse course,
                                                    @NotNull final List<Integer> sectionsIds) throws IOException {
     AtomicBoolean additionalMaterialsUpdated = new AtomicBoolean(false);
     for (Integer sectionId : sectionsIds) {
@@ -502,7 +487,7 @@ public class CCStepikConnector {
                 .filter(Lesson::isAdditional)
                 .findFirst()
                 .ifPresent(lesson -> {
-                        updateAdditionalFiles(course, project, lesson.getId());
+                        updateAdditionalFiles(course, project, lesson.getId(), sectionId);
                         additionalMaterialsUpdated.set(true);
                 });
       }
@@ -538,8 +523,10 @@ public class CCStepikConnector {
       Course course = StudyTaskManager.getInstance(project).getCourse();
       assert course != null;
       final List<Integer> sectionIds = ((RemoteCourse)course).getSectionIds();
-      final Integer sectionId = sections.get(sectionIds.size() - 1);
-      updateUnit(lesson.unitId, lesson.getId(), lesson.getIndex(), sectionId, project);
+      final Integer sectionId = sectionIds.get(sectionIds.size() - 1);
+      if (!lesson.isAdditional()) {
+        updateUnit(lesson.unitId, lesson.getId(), lesson.getIndex(), sectionId, project);
+      }
       return new Gson().fromJson(responseString, RemoteCourse.class).
         getLessons(true).get(0);
     }
@@ -549,14 +536,11 @@ public class CCStepikConnector {
     return null;
   }
 
-  public static int updateLesson(@NotNull final Project project, @NotNull final Lesson lesson, boolean showNotification) {
+  public static int updateLesson(@NotNull final Project project,
+                                 @NotNull final Lesson lesson,
+                                 Integer sectionId,
+                                 boolean showNotification) {
     Lesson postedLesson = updateLessonInfo(project, lesson, showNotification);
-    Course course = StudyTaskManager.getInstance(project).getCourse();
-
-    assert course != null;
-    final List<Integer> sections = ((RemoteCourse)course).getSections();
-    final Integer sectionId = sections.get(0);
-    updateUnit(lesson.unitId, lesson.getId(), lesson.getIndex(), sectionId, project);
 
     if (postedLesson != null) {
       updateLessonTasks(project, lesson, postedLesson);

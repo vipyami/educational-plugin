@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
-import com.jetbrains.edu.learning.EduUtils
 import com.jetbrains.edu.learning.courseFormat.CheckStatus
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
@@ -132,7 +131,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     val newLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) == null }
     for (lesson in newLessons) {
       val baseDir = project.baseDir
-      val newLessonDirName = EduNames.LESSON + lesson.index
+      val newLessonDirName = lesson.name
       val lessonDir = baseDir.findChild(newLessonDirName)
       if (lessonDir != null) {
         saveDirectory(lessonDir)
@@ -146,7 +145,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
   private fun getLessonDir(lesson: Lesson): VirtualFile? {
     val baseDir = project.baseDir
-    val newLessonDirName = EduNames.LESSON + lesson.index
+    val newLessonDirName = lesson.name
     val lessonDir = baseDir.findChild(newLessonDirName)
 
     val currentLesson = course.getLesson(lesson.id)
@@ -175,7 +174,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       return savedDir
     }
     else {
-      val oldLessonDirName = EduNames.LESSON + currentLesson.index
+      val oldLessonDirName = currentLesson.name
       val oldLessonDir = baseDir.findChild(oldLessonDirName)
       invokeAndWaitIfNeed {
         runWriteAction {
@@ -193,14 +192,13 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
 
   private fun saveDirectory(lessonDir: VirtualFile) {
-    val index = EduUtils.getIndex(lessonDir.name, EduNames.LESSON)
-    val lessonForDirectory = course.lessons[index]
+    val lessonForDirectory = course.getLesson(lessonDir.nameWithoutExtension)
 
     invokeAndWaitIfNeed {
       runWriteAction {
         try {
           lessonDir.rename(lessonForDirectory, "old_${lessonDir.name}")
-          oldLessonDirectories[lessonForDirectory.id] = lessonDir
+          oldLessonDirectories[lessonForDirectory!!.id] = lessonDir
         }
         catch (e: IOException) {
           LOG.warn(e.message)

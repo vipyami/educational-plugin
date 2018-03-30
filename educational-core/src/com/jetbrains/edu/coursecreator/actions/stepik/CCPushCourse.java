@@ -46,7 +46,7 @@ public class CCPushCourse extends DumbAwareAction {
       return;
     }
     if (course instanceof RemoteCourse) {
-      new StepikCourseLoader((RemoteCourse)course, project).uploadWithProgress(true);
+      new StepikCourseLoader(project).uploadWithProgress(true);
     }
     else {
       CCStepikConnector.postCourseWithProgress(project, course);
