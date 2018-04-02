@@ -51,10 +51,11 @@ public class EduDocumentListener implements DocumentListener {
     if (!myTaskFile.isTrackChanges()) {
       return;
     }
-    if (myAnswerPlaceholders.isEmpty()) return;
     if (e instanceof DocumentEventImpl) {
       DocumentEventImpl event = (DocumentEventImpl)e;
       Document document = e.getDocument();
+      myTaskFile.text = document.getText();
+      if (myAnswerPlaceholders.isEmpty()) return;
       int offset = e.getOffset();
       int change = event.getNewLength() - event.getOldLength();
       for (AnswerPlaceholderWrapper answerPlaceholderWrapper : myAnswerPlaceholders) {
