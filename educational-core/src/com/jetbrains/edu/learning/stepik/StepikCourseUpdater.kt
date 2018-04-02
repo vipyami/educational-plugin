@@ -11,7 +11,9 @@ import com.jetbrains.edu.learning.courseFormat.CheckStatus
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
+import com.jetbrains.edu.learning.courseFormat.tasks.ChoiceTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
+import com.jetbrains.edu.learning.courseFormat.tasks.TheoryTask
 import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourse
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourseFromStepik
@@ -46,11 +48,11 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
   @Throws(URISyntaxException::class, IOException::class)
   private fun updateLessons(courseFromServer: Course) {
-    val updatedLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
-    for (lessonFromServer in updatedLessons) {
+    val lessonsFromServer = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
+    for (lessonFromServer in lessonsFromServer) {
       val currentLesson = course.getLesson(lessonFromServer.id)
       val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
-      val updatedTasks = ArrayList(notUpdatedTasks(currentLesson, taskIdsToUpdate))
+      val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
       lessonFromServer.taskList.withIndex().forEach({ (index, task) -> task.index = index + 1 })
 
       val lessonDir = getLessonDir(lessonFromServer)
@@ -65,12 +67,16 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
             currentTask.index = taskIndex
             continue
           }
-
-          removeExistingDir(currentTask, lessonDir)
+          if (updateFilesNeeded(currentTask)) {
+            removeExistingDir(currentTask, lessonDir)
+          }
         }
 
+        taskFromServer.initTask(currentLesson, false)
 
-        createTaskDirectories(currentLesson, lessonDir!!, taskFromServer)
+        if (updateFilesNeeded(taskFromServer)) {
+          createTaskDirectories(lessonDir!!, taskFromServer)
+        }
         updatedTasks.add(taskFromServer)
       }
 
@@ -79,8 +85,11 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
   }
 
-  private fun notUpdatedTasks(currentLesson: Lesson?,
-                              taskIdsToUpdate: List<Int>) =
+  private fun updateFilesNeeded(currentTask: Task?) =
+    currentTask !is TheoryTask && currentTask !is ChoiceTask
+
+  private fun upToDateTasks(currentLesson: Lesson?,
+                            taskIdsToUpdate: List<Int>) =
     currentLesson!!.taskList.filter { task -> !taskIdsToUpdate.contains(task.stepId) }
 
   @Throws(IOException::class)
@@ -91,9 +100,8 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   }
 
   @Throws(IOException::class)
-  private fun createTaskDirectories(lesson: Lesson, lessonDir: VirtualFile, task: Task) {
-    task.initTask(lesson, false)
-
+  private fun createTaskDirectories(lessonDir: VirtualFile,
+                                    task: Task) {
     GeneratorUtils.createTask(task, lessonDir)
   }
 
