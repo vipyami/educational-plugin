@@ -13,7 +13,8 @@ import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils
-import com.jetbrains.edu.learning.stepik.StepikConnector.*
+import com.jetbrains.edu.learning.stepik.StepikConnector.getCourse
+import com.jetbrains.edu.learning.stepik.StepikConnector.getCourseFromStepik
 import java.io.IOException
 import java.net.URISyntaxException
 import java.util.*
@@ -34,8 +35,9 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
     courseFromServer.lessons.withIndex().forEach({ (index, lesson) -> lesson.index = index + 1 })
 
-    if (!course.isUpToDate) {
-      createNewLessons(project, courseFromServer)
+    val newLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) == null }
+    if (!newLessons.isEmpty()) {
+      createNewLessons(project, newLessons)
     }
     updateLessons(courseFromServer)
 
@@ -47,7 +49,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     val updatedLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
     for (lessonFromServer in updatedLessons) {
       val currentLesson = course.getLesson(lessonFromServer.id)
-      val taskIdsToUpdate = taskIdsToUpdates(lessonFromServer, currentLesson)
+      val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
       val updatedTasks = ArrayList(notUpdatedTasks(currentLesson, taskIdsToUpdate))
       lessonFromServer.taskList.withIndex().forEach({ (index, task) -> task.index = index + 1 })
 
@@ -110,25 +112,22 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   }
 
   @Throws(URISyntaxException::class, IOException::class)
-  private fun taskIdsToUpdates(lessonFromServer: Lesson,
-                               currentLesson: Lesson): List<Int> {
+  private fun taskIdsToUpdate(lessonFromServer: Lesson,
+                              currentLesson: Lesson): List<Int> {
     val taskIds = lessonFromServer.getTaskList().map { task -> task.stepId.toString() }.toTypedArray()
-    val stepContainers = multipleRequestToStepik(StepikNames.STEPS, taskIds, StepikWrappers.StepContainer::class.java)
 
-    val steps = stepContainers.flatMap({ stepContainer -> stepContainer.steps })
-    return steps
+    return lessonFromServer.taskList
       .zip(taskIds)
-      .filter { (step, taskId) ->
+      .filter { (newTask, taskId) ->
         val task = currentLesson.getTask(Integer.parseInt(taskId))
-        task == null || step.update_date.after(task.updateDate)
+        task == null || task.updateDate.before(newTask.updateDate)
       }
       .map { (_, taskId) -> Integer.parseInt(taskId) }
   }
 
   @Throws(IOException::class)
   private fun createNewLessons(project: Project,
-                               courseFromServer: Course): List<Lesson> {
-    val newLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) == null }
+                               newLessons: List<Lesson>): List<Lesson> {
     for (lesson in newLessons) {
       val baseDir = project.baseDir
       val newLessonDirName = lesson.name

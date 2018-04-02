@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.ide.BrowserUtil;
+import com.intellij.ide.projectView.ProjectView;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.notification.Notification;
@@ -182,6 +183,7 @@ public class StepikConnector {
                              new StepikCourseUpdater((RemoteCourse)course, project).updateCourse();
                            }, "Updating Course", true, project);
                            synchronize();
+                           ProjectView.getInstance(project).refresh();
                            final Notification updateNotification =
                              new Notification("Update.course", "Course update", "Current course is synchronized", NotificationType.INFORMATION);
                            updateNotification.notify(project);
@@ -192,11 +194,18 @@ public class StepikConnector {
   }
 
   public static Date getLessonUpdateDate(final int lessonId) {
+    Lesson lesson = getLessonFromServer(lessonId);
+
+    return lesson == null ? null : lesson.getUpdateDate();
+  }
+
+  @Nullable
+  public static Lesson getLessonFromServer(final int lessonId) {
     final String url = StepikNames.LESSONS + "/" + lessonId;
     try {
       List<Lesson> lessons = StepikClient.getFromStepik(url, LessonContainer.class).lessons;
       if (!lessons.isEmpty()) {
-        return lessons.get(0).getUpdateDate();
+        return lessons.get(0);
       }
     }
     catch (IOException e) {

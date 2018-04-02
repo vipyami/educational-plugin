@@ -20,7 +20,6 @@ public class RemoteCourse extends Course {
   List<Integer> instructors = new ArrayList<>();
   @Expose private int id;
   @Expose @SerializedName("update_date") private Date myUpdateDate;
-  private Boolean isUpToDate = true;
   @Expose private boolean isAdaptive = false;
   @Expose @SerializedName("is_public") boolean isPublic;
   @Expose private boolean myLoadSolutions = true; // disabled for reset courses
@@ -70,15 +69,15 @@ public class RemoteCourse extends Course {
     final Date date = StepikConnector.getCourseUpdateDate(id);
     if (date == null) return true;
     if (date.after(myUpdateDate)) {
-      isUpToDate = false;
+      return false;
     }
     for (Lesson lesson : lessons) {
       if (!lesson.isUpToDate()) {
-        isUpToDate = false;
+        return false;
       }
     }
 
-    return isUpToDate;
+    return true;
   }
 
   public void setUpdated() {
