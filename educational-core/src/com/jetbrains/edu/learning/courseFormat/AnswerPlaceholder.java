@@ -328,10 +328,10 @@ public class AnswerPlaceholder {
     if (this == o) return true;
     if (!(o instanceof AnswerPlaceholder)) return false;
     AnswerPlaceholder that = (AnswerPlaceholder)o;
+
     return getOffset() == that.getOffset() &&
            getLength() == that.getLength() &&
-           getIndex() == that.getIndex() &&
-           Objects.equals(getInitialState(), that.getInitialState());
+           getIndex() == that.getIndex();
   }
 
   @Override

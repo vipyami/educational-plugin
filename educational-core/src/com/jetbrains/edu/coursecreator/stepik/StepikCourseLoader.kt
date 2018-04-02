@@ -2,31 +2,39 @@ package com.jetbrains.edu.coursecreator.stepik
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.invokeAndWaitIfNeed
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.testFramework.runInEdtAndWait
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postUnit
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.updateAdditionalMaterials
 import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
+import com.jetbrains.edu.learning.courseFormat.ext.getDocument
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.stepik.StepikNames
 
 class StepikCourseLoader(private val project: Project) {
   private var isCourseInfoChanged = false
   private var newLessons: List<Lesson> = ArrayList()
-  private var lessonsInfoToUpdate: List<Lesson>
-  private var lessonsToUpdate: List<Lesson>
-  private val tasksToUpdateByLessonIndex: Map<Int, List<Task>>
-  private val tasksToPostByLessonIndex: Map<Int, List<Task>>
-  private val course: RemoteCourse
+  private lateinit var lessonsInfoToUpdate: List<Lesson>
+  private lateinit var lessonsToUpdate: List<Lesson>
+  private var tasksToUpdateByLessonIndex: Map<Int, List<Task>> = HashMap()
+  private var tasksToPostByLessonIndex: Map<Int, List<Task>> = HashMap()
+  private val course: RemoteCourse = StudyTaskManager.getInstance(project).course as RemoteCourse
 
-  init {
-    val courseFromServer = StudyTaskManager.getInstance(project).latestCourseFromServer
-    course = StudyTaskManager.getInstance(project).course as RemoteCourse
+  private fun init() {
+    var courseFromServer = StudyTaskManager.getInstance(project).latestCourseFromServer
+    if (courseFromServer != null) {
+      setTaskFileTextFromDocuments()
+    }
+    else {
+      courseFromServer = course
+    }
 
     isCourseInfoChanged = courseInfoChanged(courseFromServer)
 
@@ -39,7 +47,21 @@ class StepikCourseLoader(private val project: Project) {
     tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index }, { newTasks(courseFromServer, it) }).filterValues { !it.isEmpty() }
     tasksToUpdateByLessonIndex = updateCandidates.associateBy({ it.index },
                                                               { tasksToUpdate(courseFromServer, it) }).filterValues { !it.isEmpty() }
-    lessonsToUpdate = updateCandidates.filter { tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index) }
+    lessonsToUpdate = updateCandidates.filter {
+      tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index)
+    }
+  }
+
+  private fun setTaskFileTextFromDocuments() {
+    runInEdtAndWait {
+      runReadAction {
+        course.lessons
+          .flatMap { it.taskList }
+          .flatMap { it.taskFiles.values }
+          .forEach { it.text = it.getDocument(project)?.text }
+
+      }
+    }
   }
 
   private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
@@ -63,6 +85,8 @@ class StepikCourseLoader(private val project: Project) {
   fun uploadWithProgress(showNotification: Boolean) {
     ProgressManager.getInstance().run(object : com.intellij.openapi.progress.Task.Modal(project, "Updating Course", false) {
       override fun run(progressIndicator: ProgressIndicator) {
+        init()
+
         progressIndicator.isIndeterminate = true
         var postedCourse: RemoteCourse? = null
         if (isCourseInfoChanged) {

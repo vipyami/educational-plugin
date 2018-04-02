@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.ide.BrowserUtil;
-import com.intellij.ide.projectView.ProjectView;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.notification.Notification;
@@ -60,7 +59,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.jetbrains.edu.learning.EduUtils.synchronize;
 import static com.jetbrains.edu.learning.stepik.StepikWrappers.*;
 
 public class StepikConnector {
@@ -182,11 +180,7 @@ public class StepikConnector {
                              ProgressManager.getInstance().getProgressIndicator().setIndeterminate(true);
                              new StepikCourseUpdater((RemoteCourse)course, project).updateCourse();
                            }, "Updating Course", true, project);
-                           synchronize();
-                           ProjectView.getInstance(project).refresh();
-                           final Notification updateNotification =
-                             new Notification("Update.course", "Course update", "Current course is synchronized", NotificationType.INFORMATION);
-                           updateNotification.notify(project);
+
                            course.setUpdated();
                          }
                        });

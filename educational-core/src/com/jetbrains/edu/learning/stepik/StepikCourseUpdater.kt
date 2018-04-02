@@ -1,12 +1,17 @@
 package com.jetbrains.edu.learning.stepik
 
+import com.intellij.ide.projectView.ProjectView
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.invokeAndWaitIfNeed
+import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
+import com.jetbrains.edu.learning.EduUtils.synchronize
 import com.jetbrains.edu.learning.courseFormat.CheckStatus
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
@@ -24,6 +29,7 @@ import kotlin.collections.ArrayList
 
 class StepikCourseUpdater(private val course: RemoteCourse, private val project: Project) {
   private val LOG = Logger.getInstance(this.javaClass)
+  private var updatedTasksNumber: Int = 0
 
   private val oldLessonDirectories = HashMap<Int, VirtualFile>()
 
@@ -41,17 +47,59 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     if (!newLessons.isEmpty()) {
       createNewLessons(project, newLessons)
     }
-    updateLessons(courseFromServer)
+    val updateLessonsNumber = updateLessons(courseFromServer)
 
     course.lessons = courseFromServer.lessons
+    runInEdt {
+      synchronize()
+      ProjectView.getInstance(project).refresh()
+
+      showNotification(newLessons, updateLessonsNumber)
+    }
+
+  }
+
+  private fun showNotification(newLessons: List<Lesson>,
+                               updateLessonsNumber: Int) {
+    val message = "Loaded: "
+    if (!newLessons.isEmpty()) {
+      if (newLessons.size > 1) {
+        message.plus("${newLessons.size} new lessons")
+      }
+      else {
+        message.plus("one new lesson")
+      }
+      message.plus("\n")
+    }
+
+    if (updateLessonsNumber > 0) {
+      if (updateLessonsNumber == 1) {
+        message.plus("Updated one lesson")
+      }
+      else {
+        message.plus("Updated $updateLessonsNumber lessons")
+      }
+      message.plus("\n")
+    }
+
+    // to remove
+    message.plus("Updated $updatedTasksNumber tasks")
+
+    val updateNotification = Notification("Update.course", "Course updated", "Current course is synchronized", NotificationType.INFORMATION)
+    updateNotification.notify(project)
   }
 
   @Throws(URISyntaxException::class, IOException::class)
-  private fun updateLessons(courseFromServer: Course) {
+  private fun updateLessons(courseFromServer: Course): Int {
     val lessonsFromServer = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
+    var updatedLessonsNumber = 0
     for (lessonFromServer in lessonsFromServer) {
       val currentLesson = course.getLesson(lessonFromServer.id)
       val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
+      if (!taskIdsToUpdate.isEmpty()) {
+        updatedLessonsNumber++
+        updatedTasksNumber += taskIdsToUpdate.size
+      }
       val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
       lessonFromServer.taskList.withIndex().forEach({ (index, task) -> task.index = index + 1 })
 
@@ -83,6 +131,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       updatedTasks.sortBy { task -> task.index }
       lessonFromServer.taskList = updatedTasks
     }
+    return updatedLessonsNumber
   }
 
   private fun updateFilesNeeded(currentTask: Task?) =
