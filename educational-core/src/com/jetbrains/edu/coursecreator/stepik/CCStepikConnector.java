@@ -260,7 +260,7 @@ public class CCStepikConnector {
     }
   }
 
-  public static void updateAdditionalFiles(Course course, @NotNull final Project project, int stepikId, Integer sectionId) {
+  public static void updateAdditionalFiles(Course course, @NotNull final Project project, int stepikId) {
     final Lesson lesson = CCUtils.createAdditionalLesson(course, project, StepikNames.PYCHARM_ADDITIONAL);
     if (lesson != null) {
       lesson.setId(stepikId);
@@ -268,7 +268,7 @@ public class CCStepikConnector {
       if (indicator != null) {
         indicator.setText2("Publishing additional files");
       }
-      updateLesson(project, lesson, sectionId, false);
+      updateLesson(project, lesson, false);
     }
   }
 
@@ -487,7 +487,7 @@ public class CCStepikConnector {
                 .filter(Lesson::isAdditional)
                 .findFirst()
                 .ifPresent(lesson -> {
-                        updateAdditionalFiles(course, project, lesson.getId(), sectionId);
+                        updateAdditionalFiles(course, project, lesson.getId());
                         additionalMaterialsUpdated.set(true);
                 });
       }
@@ -538,7 +538,6 @@ public class CCStepikConnector {
 
   public static int updateLesson(@NotNull final Project project,
                                  @NotNull final Lesson lesson,
-                                 Integer sectionId,
                                  boolean showNotification) {
     Lesson postedLesson = updateLessonInfo(project, lesson, showNotification);
 
