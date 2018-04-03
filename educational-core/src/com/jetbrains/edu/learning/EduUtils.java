@@ -972,16 +972,21 @@ public class EduUtils {
   }
 
   @Nullable
-  public static TaskFile createStudentFile(@NotNull Project project, @NotNull VirtualFile answerFile, @Nullable Task task, int targetSubtaskIndex) {
+  public static TaskFile createStudentFile(@NotNull Project project, @NotNull VirtualFile answerFile, @Nullable final Task task, int targetSubtaskIndex) {
     try {
+      Task taskCopy;
       if (task == null) {
-        task = getTaskForFile(project, answerFile);
-        if (task == null) {
+        Task taskForFile = getTaskForFile(project, answerFile);
+        if (taskForFile == null) {
           return null;
         }
-        task = task.copy();
+        taskCopy = taskForFile.copy();
       }
-      TaskFile taskFile = task.getTaskFile(pathRelativeToTask(project, answerFile));
+      else {
+        taskCopy = task.copy();
+      }
+
+      TaskFile taskFile = taskCopy.getTaskFile(pathRelativeToTask(project, answerFile));
       if (taskFile == null) {
         return null;
       }
@@ -1003,15 +1008,15 @@ public class EduUtils {
       studentDocument.addDocumentListener(listener);
       taskFile.setTrackLengths(false);
       for (AnswerPlaceholder placeholder : taskFile.getAnswerPlaceholders()) {
-        if (task instanceof TaskWithSubtasks) {
-          int fromSubtask = ((TaskWithSubtasks)task).getActiveSubtaskIndex();
+        if (taskCopy instanceof TaskWithSubtasks) {
+          int fromSubtask = ((TaskWithSubtasks)taskCopy).getActiveSubtaskIndex();
           placeholder.switchSubtask(studentDocument, fromSubtask, targetSubtaskIndex);
         }
       }
       for (AnswerPlaceholder placeholder : taskFile.getAnswerPlaceholders()) {
         replaceWithTaskText(studentDocument, placeholder, targetSubtaskIndex);
       }
-      taskFile.setTrackChanges(true);
+      taskFile.setTrackLengths(true);
       studentDocument.removeDocumentListener(listener);
       taskFile.text = studentDocument.getImmutableCharSequence().toString();
       return taskFile;
