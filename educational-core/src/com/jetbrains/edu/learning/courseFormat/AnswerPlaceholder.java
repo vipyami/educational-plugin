@@ -331,7 +331,8 @@ public class AnswerPlaceholder {
 
     return getOffset() == that.getOffset() &&
            getLength() == that.getLength() &&
-           getIndex() == that.getIndex();
+           getIndex() == that.getIndex() &&
+           getPossibleAnswer().equals(that.getPossibleAnswer());
   }
 
   @Override
