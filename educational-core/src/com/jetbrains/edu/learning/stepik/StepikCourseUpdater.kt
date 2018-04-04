@@ -52,12 +52,18 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     val updateLessonsNumber = updateLessons(courseFromServer)
 
     course.lessons = courseFromServer.lessons.subList(0, course.lessons.size)
+    setCourseInfo(courseFromServer)
     runInEdt {
       synchronize()
       ProjectView.getInstance(project).refresh()
       showNotification(newLessons, updateLessonsNumber)
       ExternalSystemUtil.refreshProjects(project, GradleConstants.SYSTEM_ID, true, ProgressExecutionMode.MODAL_SYNC)
     }
+  }
+
+  private fun setCourseInfo(courseFromServer: Course) {
+    course.name = courseFromServer.name
+    course.description = courseFromServer.description
   }
 
   private fun showNotification(newLessons: List<Lesson>,

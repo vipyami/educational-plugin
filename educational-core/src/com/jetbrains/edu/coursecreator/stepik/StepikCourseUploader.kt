@@ -82,7 +82,7 @@ class StepikCourseUploader(private val project: Project) {
 
         updateAdditionalMaterials(postedCourse)
 
-        if (!isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+        if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
           StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
             project).course!!.copy() as RemoteCourse?
         }
@@ -95,6 +95,9 @@ class StepikCourseUploader(private val project: Project) {
           if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
             val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
             message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
+          }
+          if (isCourseInfoChanged && message.isEmpty()) {
+            message.append("Course info updated")
           }
           val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
           CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
