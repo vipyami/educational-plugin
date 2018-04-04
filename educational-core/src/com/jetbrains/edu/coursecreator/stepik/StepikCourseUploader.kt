@@ -82,7 +82,10 @@ class StepikCourseUploader(private val project: Project) {
 
         updateAdditionalMaterials(postedCourse)
 
-        StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(project).course!!.copy() as RemoteCourse?
+        if (!isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+          StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
+            project).course!!.copy() as RemoteCourse?
+        }
         if (showNotification) {
           val message = StringBuilder()
           if (!newLessons.isEmpty()) {
