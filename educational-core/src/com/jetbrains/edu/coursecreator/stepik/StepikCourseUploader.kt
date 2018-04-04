@@ -10,24 +10,25 @@ import com.intellij.openapi.project.Project
 import com.intellij.testFramework.runInEdtAndWait
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postUnit
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.updateAdditionalMaterials
+import com.jetbrains.edu.learning.EduUtils
 import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
-import com.jetbrains.edu.learning.courseFormat.ext.getDocument
+import com.jetbrains.edu.learning.courseFormat.ext.getVirtualFile
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.stepik.StepikNames
 
 class StepikCourseUploader(private val project: Project) {
   private var isCourseInfoChanged = false
   private var newLessons: List<Lesson> = ArrayList()
-  private lateinit var lessonsInfoToUpdate: List<Lesson>
-  private lateinit var lessonsToUpdate: List<Lesson>
+  private var lessonsInfoToUpdate: List<Lesson> = ArrayList()
+  private var lessonsToUpdate: List<Lesson> = ArrayList()
   private var tasksToUpdateByLessonIndex: Map<Int, List<Task>> = HashMap()
   private var tasksToPostByLessonIndex: Map<Int, List<Task>> = HashMap()
   private val course: RemoteCourse = StudyTaskManager.getInstance(project).course as RemoteCourse
 
-  private fun init() {
+  private fun doInit() {
     var courseFromServer = StudyTaskManager.getInstance(project).latestCourseFromServer
     if (courseFromServer != null) {
       setTaskFileTextFromDocuments()
@@ -52,71 +53,13 @@ class StepikCourseUploader(private val project: Project) {
     }
   }
 
-  fun uploadWithProgress(showNotification: Boolean) {
-    ProgressManager.getInstance().run(object : com.intellij.openapi.progress.Task.Modal(project, "Updating Course", false) {
-      override fun run(progressIndicator: ProgressIndicator) {
-        init()
-
-        progressIndicator.isIndeterminate = true
-        var postedCourse: RemoteCourse? = null
-        if (isCourseInfoChanged) {
-          progressIndicator.text = "Updating course info"
-          postedCourse = CCStepikConnector.updateCourseInfo(project, course)
-        }
-
-        if (!newLessons.isEmpty()) {
-          if (!isCourseInfoChanged) {
-            // it's updating course update date that is used in student project to check if there are new lessons
-            postedCourse = CCStepikConnector.updateCourseInfo(project, course)
-          }
-          uploadLessons(progressIndicator)
-        }
-
-        if (!lessonsInfoToUpdate.isEmpty()) {
-          updateLessonsInfo(progressIndicator)
-        }
-
-        if (!lessonsToUpdate.isEmpty()) {
-          updateTasks(progressIndicator)
-        }
-
-        updateAdditionalMaterials(postedCourse)
-
-        if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
-          StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
-            project).course!!.copy() as RemoteCourse?
-        }
-        if (showNotification) {
-          val message = StringBuilder()
-          if (!newLessons.isEmpty()) {
-            message.append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
-            message.append("\n")
-          }
-          if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
-            val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
-            message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
-          }
-          if (isCourseInfoChanged && message.isEmpty()) {
-            message.append("Course info updated")
-          }
-          val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
-          CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
-            BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + course.id)
-          })
-        }
-      }
-    })
-  }
-
-
   private fun setTaskFileTextFromDocuments() {
     runInEdtAndWait {
       runReadAction {
         course.lessons
           .flatMap { it.taskList }
           .flatMap { it.taskFiles.values }
-          .forEach { it.text = it.getDocument(project)?.text }
-
+          .forEach { it.text = EduUtils.createStudentFile(project, it.getVirtualFile(project)!!, it.task, 0)!!.text }
       }
     }
   }
@@ -139,10 +82,76 @@ class StepikCourseUploader(private val project: Project) {
            course.languageID != latestCourseFromServer.languageID
   }
 
+  fun uploadWithProgress(showNotification: Boolean) {
+
+    val value: com.intellij.openapi.progress.Task.Modal = object : com.intellij.openapi.progress.Task.Modal(project, "Updating Course",
+                                                                                                            true) {
+      override fun run(progressIndicator: ProgressIndicator) {
+        progressIndicator.isIndeterminate = true
+        progressIndicator.text = "Getting items to update"
+        doInit()
+        progressIndicator.checkCanceled()
+
+        var postedCourse: RemoteCourse? = null
+        if (isCourseInfoChanged) {
+          progressIndicator.text = "Updating course info"
+          postedCourse = CCStepikConnector.updateCourseInfo(project, course)
+        }
+        progressIndicator.checkCanceled()
+
+        if (!newLessons.isEmpty()) {
+          if (!isCourseInfoChanged) {
+            // it's updating course update date that is used in student project to check if there are new lessons
+            postedCourse = CCStepikConnector.updateCourseInfo(project, course)
+          }
+          uploadLessons(progressIndicator)
+        }
+        progressIndicator.checkCanceled()
+
+        if (!lessonsInfoToUpdate.isEmpty()) {
+          updateLessonsInfo(progressIndicator)
+        }
+        progressIndicator.checkCanceled()
+
+        if (!lessonsToUpdate.isEmpty()) {
+          updateTasks(progressIndicator)
+        }
+        progressIndicator.checkCanceled()
+
+        updateAdditionalMaterials(postedCourse ?: course)
+
+        if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(project).course!!.copy() as RemoteCourse?}
+        if (showNotification) {
+          val message = StringBuilder()
+          if (!newLessons.isEmpty()) {
+            message.append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
+            message.append("\n")
+          }
+          if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+            val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
+            message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
+          }
+          if (isCourseInfoChanged && message.isEmpty()) {
+            message.append("Course info updated")
+          }
+          val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
+          CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
+            BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + course.id)
+          })
+        }
+      }
+    }
+    if (!ProgressManager.getInstance().hasProgressIndicator()) {
+      runInEdtAndWait{ ProgressManager.getInstance().run(value) }
+    }
+    else {
+      value.run(ProgressManager.getInstance().progressIndicator)
+    }
+  }
+
   private fun updateAdditionalMaterials(postedCourse: RemoteCourse?) {
-    val courseFromServer = postedCourse ?: CCStepikConnector.getCourseInfo(course.id.toString())
     invokeAndWaitIfNeed { FileDocumentManager.getInstance().saveAllDocuments() }
-    val sectionIds = courseFromServer!!.sectionIds
+    val sectionIds = postedCourse!!.sectionIds
     if (!updateAdditionalMaterials(project, course, sectionIds)) {
       CCStepikConnector.postAdditionalFiles(course, project, course.id, sectionIds.size)
     }
