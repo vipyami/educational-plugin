@@ -202,7 +202,7 @@ public class TaskFile {
     }
 
     for (int i = 0; i < placeholders.size(); i++) {
-      if (!placeholders.equals(otherPlaceholders.get(i))) {
+      if (!placeholders.get(i).equals(otherPlaceholders.get(i))) {
         return false;
       }
     }
