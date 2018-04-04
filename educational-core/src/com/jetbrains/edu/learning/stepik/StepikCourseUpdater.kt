@@ -7,6 +7,8 @@ import com.intellij.openapi.application.invokeAndWaitIfNeed
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduSettings
@@ -21,6 +23,7 @@ import com.jetbrains.edu.learning.courseFormat.tasks.TheoryTask
 import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourse
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourseFromStepik
+import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.IOException
 import java.net.URISyntaxException
 import java.util.*
@@ -53,6 +56,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       synchronize()
       ProjectView.getInstance(project).refresh()
       showNotification(newLessons, updateLessonsNumber)
+      ExternalSystemUtil.refreshProjects(project, GradleConstants.SYSTEM_ID, true, ProgressExecutionMode.MODAL_SYNC)
     }
   }
 
