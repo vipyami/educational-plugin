@@ -9,7 +9,6 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.EduUtils.synchronize
 import com.jetbrains.edu.learning.courseFormat.CheckStatus
@@ -53,10 +52,8 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     runInEdt {
       synchronize()
       ProjectView.getInstance(project).refresh()
-
       showNotification(newLessons, updateLessonsNumber)
     }
-
   }
 
   private fun showNotification(newLessons: List<Lesson>,
@@ -144,7 +141,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   @Throws(IOException::class)
   private fun removeExistingDir(studentTask: Task,
                                 lessonDir: VirtualFile?) {
-    val taskDir = getTaskDir(studentTask.index, lessonDir)
+    val taskDir = getTaskDir(studentTask.name, lessonDir)
     invokeAndWaitIfNeed { runWriteAction { taskDir?.delete(studentTask) } }
   }
 
@@ -154,10 +151,8 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     GeneratorUtils.createTask(task, lessonDir)
   }
 
-  private fun getTaskDir(taskIndex: Int, lessonDir: VirtualFile?): VirtualFile? {
-    val taskDirName = EduNames.TASK + taskIndex.toString()
-
-    return lessonDir?.findChild(taskDirName)
+  private fun getTaskDir(taskName: String, lessonDir: VirtualFile?): VirtualFile? {
+    return lessonDir?.findChild(taskName)
   }
 
   private fun taskExists(lesson: Lesson, taskId: Int): Boolean {
@@ -187,8 +182,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
                                newLessons: List<Lesson>): List<Lesson> {
     for (lesson in newLessons) {
       val baseDir = project.baseDir
-      val newLessonDirName = lesson.name
-      val lessonDir = baseDir.findChild(newLessonDirName)
+      val lessonDir = baseDir.findChild(lesson.name)
       if (lessonDir != null) {
         saveDirectory(lessonDir)
       }
@@ -201,11 +195,9 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
   private fun getLessonDir(lesson: Lesson): VirtualFile? {
     val baseDir = project.baseDir
-    val newLessonDirName = lesson.name
-    val lessonDir = baseDir.findChild(newLessonDirName)
+    val lessonDir = baseDir.findChild(lesson.name)
 
     val currentLesson = course.getLesson(lesson.id)
-
 
     if (currentLesson.index == lesson.index) {
       return lessonDir
@@ -219,7 +211,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       invokeAndWaitIfNeed {
         runWriteAction {
           try {
-            savedDir!!.rename(this, newLessonDirName)
+            savedDir!!.rename(this, lesson.name)
             oldLessonDirectories.remove(lesson.id)
           }
           catch (e: IOException) {
@@ -230,12 +222,11 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       return savedDir
     }
     else {
-      val oldLessonDirName = currentLesson.name
-      val oldLessonDir = baseDir.findChild(oldLessonDirName)
+      val oldLessonDir = baseDir.findChild(currentLesson.name)
       invokeAndWaitIfNeed {
         runWriteAction {
           try {
-            oldLessonDir!!.rename(this, newLessonDirName)
+            oldLessonDir!!.rename(this, lesson.name)
           }
           catch (e: IOException) {
             LOG.warn(e.message)
