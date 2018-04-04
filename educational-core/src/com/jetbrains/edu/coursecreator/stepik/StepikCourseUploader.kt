@@ -18,7 +18,7 @@ import com.jetbrains.edu.learning.courseFormat.ext.getDocument
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.stepik.StepikNames
 
-class StepikCourseLoader(private val project: Project) {
+class StepikCourseUploader(private val project: Project) {
   private var isCourseInfoChanged = false
   private var newLessons: List<Lesson> = ArrayList()
   private lateinit var lessonsInfoToUpdate: List<Lesson>
@@ -50,36 +50,6 @@ class StepikCourseLoader(private val project: Project) {
     lessonsToUpdate = updateCandidates.filter {
       tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index)
     }
-  }
-
-  private fun setTaskFileTextFromDocuments() {
-    runInEdtAndWait {
-      runReadAction {
-        course.lessons
-          .flatMap { it.taskList }
-          .flatMap { it.taskFiles.values }
-          .forEach { it.text = it.getDocument(project)?.text }
-
-      }
-    }
-  }
-
-  private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
-
-  private fun newTasks(courseFromServer: RemoteCourse, updateCandidate: Lesson): List<Task> {
-    val lessonFormServer = courseFromServer.getLesson(updateCandidate.id)
-    val onServerTaskIds = taskIds(lessonFormServer)
-    return updateCandidate.taskList.filter { task -> !onServerTaskIds.contains(task.stepId) }
-  }
-
-
-  private fun lessonIds(latestCourseFromServer: RemoteCourse) = latestCourseFromServer.lessons.map { lesson -> lesson.id }
-
-  private fun courseInfoChanged(latestCourseFromServer: RemoteCourse): Boolean {
-    return course.name != latestCourseFromServer.name ||
-           course.description != latestCourseFromServer.description ||
-           course.humanLanguage != latestCourseFromServer.humanLanguage ||
-           course.languageID != latestCourseFromServer.languageID
   }
 
   fun uploadWithProgress(showNotification: Boolean) {
@@ -130,6 +100,37 @@ class StepikCourseLoader(private val project: Project) {
         }
       }
     })
+  }
+
+
+  private fun setTaskFileTextFromDocuments() {
+    runInEdtAndWait {
+      runReadAction {
+        course.lessons
+          .flatMap { it.taskList }
+          .flatMap { it.taskFiles.values }
+          .forEach { it.text = it.getDocument(project)?.text }
+
+      }
+    }
+  }
+
+  private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
+
+  private fun newTasks(courseFromServer: RemoteCourse, updateCandidate: Lesson): List<Task> {
+    val lessonFormServer = courseFromServer.getLesson(updateCandidate.id)
+    val onServerTaskIds = taskIds(lessonFormServer)
+    return updateCandidate.taskList.filter { task -> !onServerTaskIds.contains(task.stepId) }
+  }
+
+
+  private fun lessonIds(latestCourseFromServer: RemoteCourse) = latestCourseFromServer.lessons.map { lesson -> lesson.id }
+
+  private fun courseInfoChanged(latestCourseFromServer: RemoteCourse): Boolean {
+    return course.name != latestCourseFromServer.name ||
+           course.description != latestCourseFromServer.description ||
+           course.humanLanguage != latestCourseFromServer.humanLanguage ||
+           course.languageID != latestCourseFromServer.languageID
   }
 
   private fun updateAdditionalMaterials(postedCourse: RemoteCourse?) {

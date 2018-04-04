@@ -9,7 +9,7 @@ import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.edu.coursecreator.CCUtils;
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector;
-import com.jetbrains.edu.coursecreator.stepik.StepikCourseLoader;
+import com.jetbrains.edu.coursecreator.stepik.StepikCourseUploader;
 import com.jetbrains.edu.learning.StudyTaskManager;
 import com.jetbrains.edu.learning.courseFormat.Course;
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse;
@@ -46,7 +46,7 @@ public class CCPushCourse extends DumbAwareAction {
       return;
     }
     if (course instanceof RemoteCourse) {
-      new StepikCourseLoader(project).uploadWithProgress(true);
+      new StepikCourseUploader(project).uploadWithProgress(true);
     }
     else {
       CCStepikConnector.postCourseWithProgress(project, course);
