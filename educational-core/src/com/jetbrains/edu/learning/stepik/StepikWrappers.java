@@ -285,12 +285,8 @@ public class StepikWrappers {
     public static class Attempt {
       int step;
       public Dataset dataset;
-      String dataset_url;
       String status;
-      String time;
-      String time_left;
       String user;
-      String user_id;
       int id;
 
       public Attempt(int step) {
