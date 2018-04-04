@@ -91,44 +91,57 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     val lessonsFromServer = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
     var updatedLessonsNumber = 0
     for (lessonFromServer in lessonsFromServer) {
+      updatedLessonsNumber++
       val currentLesson = course.getLesson(lessonFromServer.id)
       val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
-      if (!taskIdsToUpdate.isEmpty()) {
-        updatedLessonsNumber++
-        updatedTasksNumber += taskIdsToUpdate.size
-      }
-      val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
       lessonFromServer.taskList.withIndex().forEach({ (index, task) -> task.index = index + 1 })
-
       val lessonDir = getLessonDir(lessonFromServer)
-      for (taskId in taskIdsToUpdate) {
-        val taskFromServer = lessonFromServer.getTask(taskId)
-        val taskIndex = taskFromServer.index
-
-        if (taskExists(currentLesson, taskId)) {
-          val currentTask = currentLesson.getTask(taskId)
-          if (isSolved(currentTask!!)) {
-            updatedTasks.add(currentTask)
-            currentTask.index = taskIndex
-            continue
-          }
-          if (updateFilesNeeded(currentTask)) {
-            removeExistingDir(currentTask, lessonDir)
-          }
+      val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
+      if (taskIdsToUpdate.isEmpty()) {
+        if (currentLesson.name != lessonFromServer.name) {
+          val currentLessonDir = getLessonDir(currentLesson)
+          invokeAndWaitIfNeed { runWriteAction { currentLessonDir?.rename(this, lessonFromServer.name) } }
         }
-
-        taskFromServer.initTask(currentLesson, false)
-
-        if (updateFilesNeeded(taskFromServer)) {
-          createTaskDirectories(lessonDir!!, taskFromServer)
-        }
-        updatedTasks.add(taskFromServer)
+      }
+      else {
+        updatedTasksNumber += taskIdsToUpdate.size
+        updateTasks(taskIdsToUpdate, lessonFromServer, currentLesson, updatedTasks, lessonDir)
       }
 
       updatedTasks.sortBy { task -> task.index }
       lessonFromServer.taskList = updatedTasks
     }
     return updatedLessonsNumber
+  }
+
+  private fun updateTasks(taskIdsToUpdate: List<Int>,
+                          lessonFromServer: Lesson,
+                          currentLesson: Lesson,
+                          updatedTasks: ArrayList<Task>,
+                          lessonDir: VirtualFile?) {
+    for (taskId in taskIdsToUpdate) {
+      val taskFromServer = lessonFromServer.getTask(taskId)
+      val taskIndex = taskFromServer.index
+
+      if (taskExists(currentLesson, taskId)) {
+        val currentTask = currentLesson.getTask(taskId)
+        if (isSolved(currentTask!!)) {
+          updatedTasks.add(currentTask)
+          currentTask.index = taskIndex
+          continue
+        }
+        if (updateFilesNeeded(currentTask)) {
+          removeExistingDir(currentTask, lessonDir)
+        }
+      }
+
+      taskFromServer.initTask(currentLesson, false)
+
+      if (updateFilesNeeded(taskFromServer)) {
+        createTaskDirectories(lessonDir!!, taskFromServer)
+      }
+      updatedTasks.add(taskFromServer)
+    }
   }
 
   private fun updateFilesNeeded(currentTask: Task?) =
