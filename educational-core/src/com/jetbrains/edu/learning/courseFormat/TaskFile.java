@@ -197,8 +197,12 @@ public class TaskFile {
 
     List<AnswerPlaceholder> placeholders = getAnswerPlaceholders();
     List<AnswerPlaceholder> otherPlaceholders = file.getAnswerPlaceholders();
+    if (placeholders.size() != otherPlaceholders.size()) {
+      return false;
+    }
+
     for (int i = 0; i < placeholders.size(); i++) {
-      if (!placeholders.equals(otherPlaceholders)) {
+      if (!placeholders.equals(otherPlaceholders.get(i))) {
         return false;
       }
     }
