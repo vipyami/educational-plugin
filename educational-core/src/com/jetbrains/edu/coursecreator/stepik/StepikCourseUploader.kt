@@ -84,60 +84,65 @@ class StepikCourseUploader(private val project: Project) {
 
   fun uploadWithProgress(showNotification: Boolean) {
 
-    val value: com.intellij.openapi.progress.Task.Modal = object : com.intellij.openapi.progress.Task.Modal(project, "Updating Course",
-                                                                                                            true) {
+    val value: com.intellij.openapi.progress.Task.Backgroundable = object : com.intellij.openapi.progress.Task.Backgroundable(project, "Updating Course",
+                                                                                                                              true) {
       override fun run(progressIndicator: ProgressIndicator) {
-        progressIndicator.isIndeterminate = true
-        progressIndicator.text = "Getting items to update"
-        doInit()
-        progressIndicator.checkCanceled()
+        EduUtils.execCancelable {
+          progressIndicator.isIndeterminate = true
+          progressIndicator.text = "Getting items to update"
+          doInit()
+          progressIndicator.checkCanceled()
 
-        var postedCourse: RemoteCourse? = null
-        if (isCourseInfoChanged) {
-          progressIndicator.text = "Updating course info"
-          postedCourse = CCStepikConnector.updateCourseInfo(project, course)
-        }
-        progressIndicator.checkCanceled()
-
-        if (!newLessons.isEmpty()) {
-          if (!isCourseInfoChanged) {
-            // it's updating course update date that is used in student project to check if there are new lessons
+          var postedCourse: RemoteCourse? = null
+          if (isCourseInfoChanged) {
+            progressIndicator.text = "Updating course info"
             postedCourse = CCStepikConnector.updateCourseInfo(project, course)
           }
-          uploadLessons(progressIndicator)
-        }
-        progressIndicator.checkCanceled()
+          progressIndicator.checkCanceled()
 
-        if (!lessonsInfoToUpdate.isEmpty()) {
-          updateLessonsInfo(progressIndicator)
-        }
-        progressIndicator.checkCanceled()
-
-        if (!lessonsToUpdate.isEmpty()) {
-          updateTasks(progressIndicator)
-        }
-        progressIndicator.checkCanceled()
-
-        updateAdditionalMaterials(postedCourse ?: course)
-
-        if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(project).course!!.copy() as RemoteCourse?}
-        if (showNotification) {
-          val message = StringBuilder()
           if (!newLessons.isEmpty()) {
-            message.append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
-            message.append("\n")
+            if (!isCourseInfoChanged) {
+              // it's updating course update date that is used in student project to check if there are new lessons
+              postedCourse = CCStepikConnector.updateCourseInfo(project, course)
+            }
+            uploadLessons(progressIndicator)
           }
-          if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
-            val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
-            message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
+          progressIndicator.checkCanceled()
+
+          if (!lessonsInfoToUpdate.isEmpty()) {
+            updateLessonsInfo(progressIndicator)
           }
-          if (isCourseInfoChanged && message.isEmpty()) {
-            message.append("Course info updated")
+          progressIndicator.checkCanceled()
+
+          if (!lessonsToUpdate.isEmpty()) {
+            updateTasks(progressIndicator)
           }
-          val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
-          CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
-            BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + course.id)
-          })
+          progressIndicator.checkCanceled()
+
+          updateAdditionalMaterials(postedCourse ?: course)
+
+          if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+            StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
+              project).course!!.copy() as RemoteCourse?
+          }
+          if (showNotification) {
+            val message = StringBuilder()
+            if (!newLessons.isEmpty()) {
+              message.append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
+              message.append("\n")
+            }
+            if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+              val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
+              message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
+            }
+            if (isCourseInfoChanged && message.isEmpty()) {
+              message.append("Course info updated")
+            }
+            val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
+            CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
+              BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + course.id)
+            })
+          }
         }
       }
     }
@@ -160,7 +165,7 @@ class StepikCourseUploader(private val project: Project) {
   private fun updateTasks(progressIndicator: ProgressIndicator) {
     val totalSize = tasksToPostByLessonIndex.values.sumBy { lessonsList -> lessonsList.size } + tasksToUpdateByLessonIndex.values.sumBy { lessonsList -> lessonsList.size }
     val showVerboseProgress = showVerboseProgress(totalSize)
-    progressIndicator.isIndeterminate = false
+    progressIndicator.isIndeterminate = showVerboseProgress
     var taskNumber = 0
     lessonsToUpdate.forEach { lesson ->
       progressIndicator.text = "Updating lesson: ${lesson.name}"
