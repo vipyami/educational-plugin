@@ -330,6 +330,9 @@ public abstract class Task extends StudyItem {
     }
 
     Map<String, TaskFile> otherTaskFiles = task.taskFiles;
+    if (taskFiles.size() != otherTaskFiles.size()) {
+      return false;
+    }
     for (Map.Entry<String, TaskFile> entry : taskFiles.entrySet()) {
       String name = entry.getKey();
       TaskFile taskFile = entry.getValue();
