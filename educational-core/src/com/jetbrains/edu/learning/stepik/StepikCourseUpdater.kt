@@ -58,13 +58,13 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
   private fun showNotification(newLessons: List<Lesson>,
                                updateLessonsNumber: Int) {
-    val message = "Loaded: "
+    val message = ""
     if (!newLessons.isEmpty()) {
       if (newLessons.size > 1) {
-        message.plus("${newLessons.size} new lessons")
+        message.plus("Loaded ${newLessons.size} new lessons")
       }
       else {
-        message.plus("one new lesson")
+        message.plus("Loaded one new lesson")
       }
       message.plus("\n")
     }
