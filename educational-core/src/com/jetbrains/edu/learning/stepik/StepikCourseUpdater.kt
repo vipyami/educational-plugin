@@ -48,7 +48,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
     val updateLessonsNumber = updateLessons(courseFromServer)
 
-    course.lessons = courseFromServer.lessons
+    course.lessons = courseFromServer.lessons.subList(0, course.lessons.size)
     runInEdt {
       synchronize()
       ProjectView.getInstance(project).refresh()
@@ -110,6 +110,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
       updatedTasks.sortBy { task -> task.index }
       lessonFromServer.taskList = updatedTasks
+      lessonFromServer.initLesson(course, false)
     }
     return updatedLessonsNumber
   }
