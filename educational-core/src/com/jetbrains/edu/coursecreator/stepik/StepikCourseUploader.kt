@@ -6,6 +6,7 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.runInEdtAndWait
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postUnit
@@ -84,7 +85,7 @@ class StepikCourseUploader(private val project: Project) {
 
   fun uploadWithProgress(showNotification: Boolean) {
 
-    val value: com.intellij.openapi.progress.Task.Backgroundable = object : com.intellij.openapi.progress.Task.Backgroundable(project, "Updating Course",
+    val task: com.intellij.openapi.progress.Task.Backgroundable = object : com.intellij.openapi.progress.Task.Backgroundable(project, "Updating Course",
                                                                                                                               true) {
       override fun run(progressIndicator: ProgressIndicator) {
         EduUtils.execCancelable {
@@ -146,12 +147,9 @@ class StepikCourseUploader(private val project: Project) {
         }
       }
     }
-    if (!ProgressManager.getInstance().hasProgressIndicator()) {
-      runInEdtAndWait{ ProgressManager.getInstance().run(value) }
-    }
-    else {
-      value.run(ProgressManager.getInstance().progressIndicator)
-    }
+    val indicator = BackgroundableProcessIndicator(task)
+    indicator.isIndeterminate = false
+    ProgressManager.getInstance().runProcessWithProgressAsynchronously(task, indicator)
   }
 
   private fun updateAdditionalMaterials(postedCourse: RemoteCourse?) {
