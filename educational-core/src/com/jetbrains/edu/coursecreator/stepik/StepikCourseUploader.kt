@@ -46,9 +46,10 @@ class StepikCourseUploader(private val project: Project) {
     lessonsInfoToUpdate = lessonsInfoToUpdate(course, serverLessonIds, courseFromServer)
 
     val updateCandidates = course.lessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
-    tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index }, { newTasks(courseFromServer, it) }).filterValues { !it.isEmpty() }
+    val lessonsById = courseFromServer.lessons.associateBy({ it.id }, { it })
+    tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index }, { newTasks(lessonsById[it.id]!!, it) }).filterValues { !it.isEmpty() }
     tasksToUpdateByLessonIndex = updateCandidates.associateBy({ it.index },
-                                                              { tasksToUpdate(courseFromServer, it) }).filterValues { !it.isEmpty() }
+                                                              { tasksToUpdate(lessonsById[it.id]!!, it) }).filterValues { !it.isEmpty() }
     lessonsToUpdate = updateCandidates.filter {
       tasksToPostByLessonIndex.containsKey(it.index) || tasksToUpdateByLessonIndex.containsKey(it.index)
     }
@@ -67,8 +68,7 @@ class StepikCourseUploader(private val project: Project) {
 
   private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
 
-  private fun newTasks(courseFromServer: RemoteCourse, updateCandidate: Lesson): List<Task> {
-    val lessonFormServer = courseFromServer.getLesson(updateCandidate.id)
+  private fun newTasks(lessonFormServer: Lesson, updateCandidate: Lesson): List<Task> {
     val onServerTaskIds = taskIds(lessonFormServer)
     return updateCandidate.taskList.filter { task -> !onServerTaskIds.contains(task.stepId) }
   }
@@ -241,11 +241,12 @@ class StepikCourseUploader(private val project: Project) {
 
   private fun showVerboseProgress(totalSize: Int) = totalSize > 1
 
-  private fun tasksToUpdate(courseFromServer: RemoteCourse, updateCandidate: Lesson): List<Task> {
-    val lessonFormServer = courseFromServer.getLesson(updateCandidate.id)
+  private fun tasksToUpdate(lessonFormServer: Lesson, updateCandidate: Lesson): List<Task> {
     val onServerTaskIds = taskIds(lessonFormServer)
     val tasksUpdateCandidate = updateCandidate.taskList.filter { task -> onServerTaskIds.contains(task.stepId) }
-    return tasksUpdateCandidate.filter { it != lessonFormServer.getTask(it.stepId) }
+
+    val taskById = lessonFormServer.taskList.associateBy({ it.stepId }, { it })
+    return tasksUpdateCandidate.filter { it != taskById[it.stepId] }
   }
 
   private fun lessonsInfoToUpdate(course: Course,
@@ -253,10 +254,11 @@ class StepikCourseUploader(private val project: Project) {
                                   latestCourseFromServer: RemoteCourse): ArrayList<Lesson> {
     val updateCandidates = course.lessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
     val toUpdateInfo = ArrayList<Lesson>()
+    val lessonsById = latestCourseFromServer.lessons.associateBy ( { it.id }, {it} )
     for (updateCandidate in updateCandidates) {
-      val lessonFormServer = latestCourseFromServer.getLesson(updateCandidate.id)
+      val lessonFormServer = lessonsById[updateCandidate.id]
 
-      if (lessonFormServer.index != updateCandidate.index) {
+      if (lessonFormServer!!.index != updateCandidate.index) {
         toUpdateInfo.add(updateCandidate)
         continue
       }

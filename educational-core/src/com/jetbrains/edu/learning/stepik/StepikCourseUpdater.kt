@@ -130,12 +130,13 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
                           currentLesson: Lesson,
                           updatedTasks: ArrayList<Task>,
                           lessonDir: VirtualFile?) {
+    val serverTasksById = lessonFromServer.taskList.associateBy({ it.stepId }, { it })
+    val tasksById = currentLesson.taskList.associateBy({ it.stepId }, { it })
     for (taskId in taskIdsToUpdate) {
-      val taskFromServer = lessonFromServer.getTask(taskId)
-      val taskIndex = taskFromServer.index
-
-      if (taskExists(currentLesson, taskId)) {
-        val currentTask = currentLesson.getTask(taskId)
+      val taskFromServer = serverTasksById[taskId]
+      val taskIndex = taskFromServer!!.index
+      if (tasksById.containsKey(taskId)) {
+        val currentTask = tasksById[taskId]
         if (isSolved(currentTask!!)) {
           updatedTasks.add(currentTask)
           currentTask.index = taskIndex
@@ -179,10 +180,6 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     return lessonDir?.findChild(taskName)
   }
 
-  private fun taskExists(lesson: Lesson, taskId: Int): Boolean {
-    return lesson.getTask(taskId) != null
-  }
-
   private fun isSolved(studentTask: Task): Boolean {
     return CheckStatus.Solved == studentTask.status
   }
@@ -191,11 +188,12 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   private fun taskIdsToUpdate(lessonFromServer: Lesson,
                               currentLesson: Lesson): List<Int> {
     val taskIds = lessonFromServer.getTaskList().map { task -> task.stepId.toString() }.toTypedArray()
+    val tasksById = currentLesson.taskList.associateBy({ it.stepId }, { it })
 
     return lessonFromServer.taskList
       .zip(taskIds)
       .filter { (newTask, taskId) ->
-        val task = currentLesson.getTask(Integer.parseInt(taskId))
+        val task = tasksById[Integer.parseInt(taskId)]
         task == null || task.updateDate.before(newTask.updateDate)
       }
       .map { (_, taskId) -> Integer.parseInt(taskId) }
