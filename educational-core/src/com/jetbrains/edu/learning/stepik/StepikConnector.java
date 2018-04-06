@@ -143,7 +143,7 @@ public class StepikConnector {
       course = getCourseFromStepik(EduSettings.getInstance().getUser(), courseId, true);
     }
     catch (IOException e) {
-      LOG.warn(e.getMessage());
+      LOG.warn(e);
     }
     return course == null ? null : course.getUpdateDate();
   }
@@ -159,7 +159,7 @@ public class StepikConnector {
       return;
     }
 
-    ProgressManager.getInstance().runProcessWithProgressAsynchronously(new Backgroundable(null, "Updating Course") {
+    ProgressManager.getInstance().runProcessWithProgressAsynchronously(new Backgroundable(project, "Updating Course") {
       @Override
       public void run(@NotNull ProgressIndicator indicator) {
         if (!course.isUpToDate()) {
