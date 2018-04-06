@@ -1,5 +1,6 @@
 package com.jetbrains.edu.coursecreator.actions.stepik;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.IdeView;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -88,16 +89,31 @@ public class CCPushLesson extends DumbAwareAction {
         if (lesson.getId() > 0) {
           int lessonId = CCStepikConnector.updateLesson(project, lesson, true);
           if (lessonId != -1) {
-            CCStepikConnector.showNotification(project, "Lesson updated", "Lesson updated", null, null);
+            StudyTaskManager.getInstance(project).latestCourseFromServer.getLessons().set(lesson.getIndex() - 1, lesson);
+            CCStepikConnector.showNotification(project, "Lesson updated", "Lesson " + lesson.getName() + " updated",
+                                               "See on Stepik",
+                                               () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/lesson/" + lessonId));
+          }
+          else {
+            CCStepikConnector.showErrorNotification(project, "Lesson wasn't updated", "Lesson " + lesson.getName() + " wasn't updated");
           }
         }
         else {
           final int lessonId = CCStepikConnector.postLesson(project, lesson);
           final List<Integer> sections = ((RemoteCourse)course).getSectionIds();
-          final Integer sectionId = sections.get(sections.size()-1);
+          final Integer sectionId = sections.get(sections.size() - 1);
           CCStepikConnector.postUnit(lessonId, lesson.getIndex(), sectionId, project);
+          if (lessonId != -1) {
+            StudyTaskManager.getInstance(project).latestCourseFromServer.getLessons().add(lesson.getIndex() - 1, lesson);
+            CCStepikConnector.showNotification(project, "Lesson posted", "Lesson " + lesson.getName() + " posted",
+                                               "See on Stepik",
+                                               () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/lesson/" + lessonId));
+          }
+          else {
+            CCStepikConnector.showErrorNotification(project, "Lesson wasn't uploaded", "Lesson " + lesson.getName() + " wasn't uploaded");
+          }
         }
-      }});
+      }
+    });
   }
-
 }

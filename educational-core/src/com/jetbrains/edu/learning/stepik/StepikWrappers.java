@@ -91,13 +91,13 @@ public class StepikWrappers {
         final VirtualFile taskDir = task.getTaskDir(project);
         assert taskDir != null;
         for (final Map.Entry<String, TaskFile> entry : task.getTaskFiles().entrySet()) {
-          ApplicationManager.getApplication().runWriteAction(() -> {
+          ApplicationManager.getApplication().invokeAndWait(() -> ApplicationManager.getApplication().runWriteAction(() -> {
             VirtualFile answerFile = EduUtils.findTaskFileInDir(entry.getValue(), taskDir);
             if (answerFile == null) return;
             TaskFile studentTaskFile = EduUtils.createStudentFile(project, answerFile, null, 0);
             if (studentTaskFile == null) return;
             source.files.add(studentTaskFile);
-          });
+          }));
         }
       }
     }

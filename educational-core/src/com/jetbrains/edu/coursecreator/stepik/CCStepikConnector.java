@@ -116,7 +116,11 @@ public class CCStepikConnector {
       if (line.getStatusCode() != HttpStatus.SC_CREATED) {
         final String message = FAILED_TITLE + "course ";
         LOG.error(message + responseString);
-        showErrorNotification(project, FAILED_TITLE, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+        showErrorNotification(project, FAILED_TITLE, detailString);
         return;
       }
       final RemoteCourse courseOnRemote = new Gson().fromJson(responseString, StepikWrappers.CoursesContainer.class).courses.get(0);
@@ -328,7 +332,11 @@ public class CCStepikConnector {
       EntityUtils.consume(responseEntity);
       if (line.getStatusCode() != HttpStatus.SC_CREATED) {
         LOG.error(FAILED_TITLE + responseString);
-        showErrorNotification(project, FAILED_TITLE, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+        showErrorNotification(project, FAILED_TITLE, detailString);
       }
       else {
         StepikWrappers.UnitContainer unitContainer = new Gson().fromJson(responseString, StepikWrappers.UnitContainer.class);
@@ -367,7 +375,11 @@ public class CCStepikConnector {
       EntityUtils.consume(responseEntity);
       if (line.getStatusCode() != HttpStatus.SC_OK) {
         LOG.error("Failed to update Unit" + responseString);
-        showErrorNotification(project, FAILED_TITLE, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+        showErrorNotification(project, FAILED_TITLE, detailString);
       }
     }
     catch (IOException e) {
@@ -393,7 +405,11 @@ public class CCStepikConnector {
       EntityUtils.consume(responseEntity);
       if (line.getStatusCode() != HttpStatus.SC_CREATED) {
         LOG.error(FAILED_TITLE + responseString);
-        showErrorNotification(project, FAILED_TITLE, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+        showErrorNotification(project, FAILED_TITLE, detailString);
         return -1;
       }
       final Section postedSection = new Gson().fromJson(responseString, StepikWrappers.SectionContainer.class).getSections().get(0);
@@ -405,65 +421,61 @@ public class CCStepikConnector {
     return -1;
   }
 
-  public static void updateTask(@NotNull final Project project, @NotNull final Task task, boolean showNotification) {
-    if (!checkIfAuthorized(project, "update task")) return;
+  public static boolean updateTask(@NotNull final Project project, @NotNull final Task task, boolean showNotification) {
+    if (!checkIfAuthorized(project, "update task")) return false;
     final Lesson lesson = task.getLesson();
     final int lessonId = lesson.getId();
 
     VirtualFile taskDir = task.getTaskDir(project);
-    if (taskDir == null) return;
+    if (taskDir == null) return false;
 
     final HttpPut request = new HttpPut(StepikNames.STEPIK_API_URL + StepikNames.STEP_SOURCES
-                                                                                    + String.valueOf(task.getStepId()));
+                                        + String.valueOf(task.getStepId()));
     final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().
       registerTypeAdapter(AnswerPlaceholder.class, new StepikSubmissionAnswerPlaceholderAdapter()).create();
-    ApplicationManager.getApplication().invokeLater(() -> {
-      final Language language = lesson.getCourse().getLanguageById();
-      final EduConfigurator configurator = EduConfiguratorManager.forLanguage(language);
-      if (configurator == null) return;
-      List<VirtualFile> testFiles = Arrays.stream(taskDir.getChildren()).filter(configurator::isTestFile)
-                                                 .collect(Collectors.toList());
-      for (VirtualFile file : testFiles) {
-        try {
-          task.addTestsTexts(file.getName(), VfsUtilCore.loadText(file));
-        }
-        catch (IOException e) {
-          LOG.warn("Failed to load text " + file.getName());
-        }
-      }
-      final String requestBody = gson.toJson(new StepikWrappers.StepSourceWrapper(project, task, lessonId));
-      request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
-
+    final Language language = lesson.getCourse().getLanguageById();
+    final EduConfigurator configurator = EduConfiguratorManager.forLanguage(language);
+    if (configurator == null) return false;
+    List<VirtualFile> testFiles = Arrays.stream(taskDir.getChildren()).filter(configurator::isTestFile)
+      .collect(Collectors.toList());
+    for (VirtualFile file : testFiles) {
       try {
-        final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
-        if (client == null) return;
-        final CloseableHttpResponse response = client.execute(request);
-        final HttpEntity responseEntity = response.getEntity();
-        final String responseString = responseEntity != null ? EntityUtils.toString(responseEntity) : "";
-        EntityUtils.consume(responseEntity);
-        final StatusLine line = response.getStatusLine();
-        switch (line.getStatusCode()) {
-          case HttpStatus.SC_OK:
-            if (showNotification) {
-              showNotification(project, "Task updated", "Task updated", null, null);
-            }
-            break;
-          case HttpStatus.SC_NOT_FOUND:
-            // TODO: support case when lesson was removed from Stepik too
-            postTask(project, task, task.getLesson().getId());
-            break;
-          default:
-            final String message = "Failed to update task ";
-            LOG.error(message + responseString);
-            if (showNotification) {
-              showErrorNotification(project, message, responseString);
-            }
-        }
+        task.addTestsTexts(file.getName(), VfsUtilCore.loadText(file));
       }
       catch (IOException e) {
-        LOG.error(e.getMessage());
+        LOG.warn("Failed to load text " + file.getName());
       }
-    });
+    }
+    final String requestBody = gson.toJson(new StepikWrappers.StepSourceWrapper(project, task, lessonId));
+    request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
+
+    try {
+      final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
+      if (client == null) return false;
+      final CloseableHttpResponse response = client.execute(request);
+      final HttpEntity responseEntity = response.getEntity();
+      final String responseString = responseEntity != null ? EntityUtils.toString(responseEntity) : "";
+      EntityUtils.consume(responseEntity);
+      final StatusLine line = response.getStatusLine();
+      switch (line.getStatusCode()) {
+        case HttpStatus.SC_OK:
+          if (showNotification) {
+            return true;
+          }
+          break;
+        case HttpStatus.SC_NOT_FOUND:
+          // TODO: support case when lesson was removed from Stepik too
+          return postTask(project, task, task.getLesson().getId());
+        default:
+          final String message = "Failed to update task ";
+          LOG.error(message + responseString);
+          return false;
+      }
+    }
+    catch (IOException e) {
+      LOG.error(e.getMessage());
+    }
+    return false;
   }
 
   public static RemoteCourse updateCourseInfo(@NotNull final Project project, @NotNull final RemoteCourse course) {
@@ -496,7 +508,11 @@ public class CCStepikConnector {
       if (line.getStatusCode() != HttpStatus.SC_OK) {
         final String message = FAILED_TITLE + "course ";
         LOG.error(message + responseString);
-        showErrorNotification(project, FAILED_TITLE, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+          showErrorNotification(project, FAILED_TITLE, detailString);
       }
       return new Gson().fromJson(responseString, StepikWrappers.CoursesContainer.class).courses.get(0);
     }
@@ -548,7 +564,11 @@ public class CCStepikConnector {
         final String message = "Failed to update lesson ";
         LOG.error(message + responseString);
         if (showNotification) {
-          showErrorNotification(project, message, responseString);
+          final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+          final JsonElement detail = details.get("detail");
+          final String detailString = detail != null ? detail.getAsString() : responseString;
+
+          showErrorNotification(project, message, detailString);
         }
       }
 
@@ -612,12 +632,9 @@ public class CCStepikConnector {
     }
   }
 
-  private static void showErrorNotification(@NotNull Project project, String message, String responseString) {
-    final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
-    final JsonElement detail = details.get("detail");
-    final String detailString = detail != null ? detail.getAsString() : responseString;
+  public static void showErrorNotification(@NotNull Project project, String title, String message) {
     final Notification notification =
-      new Notification("Push.course", message, detailString, NotificationType.ERROR);
+      new Notification("Push.course", title, message, NotificationType.ERROR);
     notification.notify(project);
   }
 
@@ -674,7 +691,11 @@ public class CCStepikConnector {
       if (line.getStatusCode() != HttpStatus.SC_CREATED) {
         final String message = FAILED_TITLE + "lesson ";
         LOG.error(message + responseString);
-        showErrorNotification(project, message, responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
+
+          showErrorNotification(project, message, detailString);
         return 0;
       }
       final Lesson postedLesson = new Gson().fromJson(responseString, RemoteCourse.class).getLessons(true).get(0);
@@ -707,7 +728,11 @@ public class CCStepikConnector {
         final StatusLine line = response.getStatusLine();
         if (line.getStatusCode() != HttpStatus.SC_NO_CONTENT) {
           LOG.error("Failed to delete task " + responseString);
-          showErrorNotification(project, "Failed to delete task ", responseString);
+            final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+            final JsonElement detail = details.get("detail");
+            final String detailString = detail != null ? detail.getAsString() : responseString;
+
+            showErrorNotification(project, "Failed to delete task ", detailString);
         }
       }
       catch (IOException e) {
@@ -716,38 +741,44 @@ public class CCStepikConnector {
     });
   }
 
-  public static void postTask(final Project project, @NotNull final Task task, final int lessonId) {
-    if (!checkIfAuthorized(project, "postTask")) return;
+  public static boolean postTask(final Project project, @NotNull final Task task, final int lessonId) {
+    if (!checkIfAuthorized(project, "postTask")) return false;
 
     final HttpPost request = new HttpPost(StepikNames.STEPIK_API_URL + "/step-sources");
     final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().
       registerTypeAdapter(AnswerPlaceholder.class, new StepikSubmissionAnswerPlaceholderAdapter()).create();
-    ApplicationManager.getApplication().invokeLater(() -> {
-      final String requestBody = gson.toJson(new StepikWrappers.StepSourceWrapper(project, task, lessonId));
-      request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
+    final String requestBody = gson.toJson(new StepikWrappers.StepSourceWrapper(project, task, lessonId));
+    request.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
 
-      try {
-        final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
-        if (client == null) return;
-        final CloseableHttpResponse response = client.execute(request);
-        final StatusLine line = response.getStatusLine();
-        final HttpEntity responseEntity = response.getEntity();
-        final String responseString = responseEntity != null ? EntityUtils.toString(responseEntity) : "";
-        EntityUtils.consume(responseEntity);
-        if (line.getStatusCode() != HttpStatus.SC_CREATED) {
-          final String message = FAILED_TITLE + "task ";
-          LOG.error(message + responseString);
-          showErrorNotification(project, message, responseString);
-          return;
-        }
+    try {
+      final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
+      if (client == null) return false;
+      final CloseableHttpResponse response = client.execute(request);
+      final StatusLine line = response.getStatusLine();
+      final HttpEntity responseEntity = response.getEntity();
+      final String responseString = responseEntity != null ? EntityUtils.toString(responseEntity) : "";
+      EntityUtils.consume(responseEntity);
+      if (line.getStatusCode() != HttpStatus.SC_CREATED) {
+        final String message = FAILED_TITLE + "task ";
+        LOG.error(message + responseString);
+        final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
+        final JsonElement detail = details.get("detail");
+        final String detailString = detail != null ? detail.getAsString() : responseString;
 
-        final JsonObject postedTask = new Gson().fromJson(responseString, JsonObject.class);
-        final JsonObject stepSource = postedTask.getAsJsonArray("step-sources").get(0).getAsJsonObject();
-        task.setStepId(stepSource.getAsJsonPrimitive("id").getAsInt());
+        showErrorNotification(project, message, detailString);
+        return false;
       }
-      catch (IOException e) {
-        LOG.error(e.getMessage());
-      }
-    });
+
+      final JsonObject postedTask = new Gson().fromJson(responseString, JsonObject.class);
+      final JsonObject stepSource = postedTask.getAsJsonArray("step-sources").get(0).getAsJsonObject();
+      task.setStepId(stepSource.getAsJsonPrimitive("id").getAsInt());
+      return true;
+    }
+    catch (IOException e) {
+      LOG.error(e.getMessage());
+    }
+
+    return false;
   }
+
 }
