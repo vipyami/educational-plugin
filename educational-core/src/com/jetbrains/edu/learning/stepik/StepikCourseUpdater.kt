@@ -51,7 +51,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
     val updateLessonsNumber = updateLessons(courseFromServer)
 
-    course.lessons = courseFromServer.lessons.subList(0, course.lessons.size)
+    course.lessons = courseFromServer.lessons
     setCourseInfo(courseFromServer)
     runInEdt {
       synchronize()
