@@ -140,6 +140,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
         if (isSolved(currentTask!!)) {
           updatedTasks.add(currentTask)
           currentTask.index = taskIndex
+          currentTask.taskTexts = taskFromServer.taskTexts
           continue
         }
         if (updateFilesNeeded(currentTask)) {
@@ -149,9 +150,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
       taskFromServer.initTask(currentLesson, false)
 
-      if (updateFilesNeeded(taskFromServer)) {
-        createTaskDirectories(lessonDir!!, taskFromServer)
-      }
+      createTaskDirectories(lessonDir!!, taskFromServer)
       updatedTasks.add(taskFromServer)
     }
   }
