@@ -118,7 +118,9 @@ class StepikCourseUploader(private val project: Project) {
           }
           progressIndicator.checkCanceled()
 
-          updateAdditionalMaterials(postedCourse ?: course)
+          if (postedCourse != null) {
+            updateAdditionalMaterials(postedCourse)
+          }
 
           if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
             StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
