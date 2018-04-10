@@ -57,6 +57,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       synchronize()
       ProjectView.getInstance(project).refresh()
       showNotification(newLessons, updateLessonsNumber)
+      // TODO: use method from Katya's section changes
       ExternalSystemUtil.refreshProjects(project, GradleConstants.SYSTEM_ID, true, ProgressExecutionMode.MODAL_SYNC)
     }
   }
@@ -68,31 +69,19 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
   private fun showNotification(newLessons: List<Lesson>,
                                updateLessonsNumber: Int) {
-    val message = ""
-    if (!newLessons.isEmpty()) {
-      if (newLessons.size > 1) {
-        message.plus("Loaded ${newLessons.size} new lessons")
+    val message = buildString {
+      if (!newLessons.isEmpty()) {
+        append(if (newLessons.size > 1) "Loaded ${newLessons.size} new lessons" else "Loaded one new lesson")
+        append("\n")
       }
-      else {
-        message.plus("Loaded one new lesson")
+
+      if (updateLessonsNumber > 0) {
+        append(if (updateLessonsNumber == 1) "Updated one lesson" else "Updated $updateLessonsNumber lessons")
+        append("\n")
       }
-      message.plus("\n")
     }
 
-    if (updateLessonsNumber > 0) {
-      if (updateLessonsNumber == 1) {
-        message.plus("Updated one lesson")
-      }
-      else {
-        message.plus("Updated $updateLessonsNumber lessons")
-      }
-      message.plus("\n")
-    }
-
-    // to remove
-    message.plus("Updated $updatedTasksNumber tasks")
-
-    val updateNotification = Notification("Update.course", "Course updated", "Current course is synchronized", NotificationType.INFORMATION)
+    val updateNotification = Notification("Update.course", "Course updated", message, NotificationType.INFORMATION)
     updateNotification.notify(project)
   }
 
@@ -104,7 +93,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       updatedLessonsNumber++
       val currentLesson = course.getLesson(lessonFromServer.id)
       val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
-      lessonFromServer.taskList.withIndex().forEach({ (index, task) -> task.index = index + 1 })
+      lessonFromServer.taskList.withIndex().forEach { (index, task) -> task.index = index + 1 }
       val lessonDir = getLessonDir(lessonFromServer)
       val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
       if (taskIdsToUpdate.isEmpty()) {
@@ -158,9 +147,9 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   private fun updateFilesNeeded(currentTask: Task?) =
     currentTask !is TheoryTask && currentTask !is ChoiceTask
 
-  private fun upToDateTasks(currentLesson: Lesson?,
+  private fun upToDateTasks(currentLesson: Lesson,
                             taskIdsToUpdate: List<Int>) =
-    currentLesson!!.taskList.filter { task -> !taskIdsToUpdate.contains(task.stepId) }
+    currentLesson.taskList.filter { task -> !taskIdsToUpdate.contains(task.stepId) }
 
   @Throws(IOException::class)
   private fun removeExistingDir(studentTask: Task,

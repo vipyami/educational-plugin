@@ -1,16 +1,15 @@
 package com.jetbrains.edu.coursecreator.stepik
 
-import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.invokeAndWaitIfNeed
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task.Backgroundable
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.runInEdtAndWait
-import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postUnit
-import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.updateAdditionalMaterials
+import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.*
 import com.jetbrains.edu.learning.EduUtils
 import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.Course
@@ -18,7 +17,6 @@ import com.jetbrains.edu.learning.courseFormat.Lesson
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
 import com.jetbrains.edu.learning.courseFormat.ext.getVirtualFile
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
-import com.jetbrains.edu.learning.stepik.StepikNames
 
 class StepikCourseUploader(private val project: Project) {
   private var isCourseInfoChanged = false
@@ -47,7 +45,8 @@ class StepikCourseUploader(private val project: Project) {
 
     val updateCandidates = course.lessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
     val lessonsById = courseFromServer.lessons.associateBy({ it.id }, { it })
-    tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index }, { newTasks(lessonsById[it.id]!!, it) }).filterValues { !it.isEmpty() }
+    tasksToPostByLessonIndex = updateCandidates.associateBy({ it.index },
+                                                            { newTasks(lessonsById[it.id]!!, it) }).filterValues { !it.isEmpty() }
     tasksToUpdateByLessonIndex = updateCandidates.associateBy({ it.index },
                                                               { tasksToUpdate(lessonsById[it.id]!!, it) }).filterValues { !it.isEmpty() }
     lessonsToUpdate = updateCandidates.filter {
@@ -85,8 +84,7 @@ class StepikCourseUploader(private val project: Project) {
 
   fun uploadWithProgress(showNotification: Boolean) {
 
-    val task: com.intellij.openapi.progress.Task.Backgroundable = object : com.intellij.openapi.progress.Task.Backgroundable(project, "Updating Course",
-                                                                                                                              true) {
+    val task: Backgroundable = object : Backgroundable(project, "Updating Course", true) {
       override fun run(progressIndicator: ProgressIndicator) {
         EduUtils.execCancelable {
           progressIndicator.isIndeterminate = true
@@ -124,25 +122,26 @@ class StepikCourseUploader(private val project: Project) {
 
           if (isCourseInfoChanged || !newLessons.isEmpty() || !lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
             StudyTaskManager.getInstance(project).latestCourseFromServer = StudyTaskManager.getInstance(
-              project).course!!.copy() as RemoteCourse?
+              project).course!!.copy() as? RemoteCourse
           }
           if (showNotification) {
-            val message = StringBuilder()
-            if (!newLessons.isEmpty()) {
-              message.append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
-              message.append("\n")
-            }
-            if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
-              val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
-              message.append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
-            }
-            if (isCourseInfoChanged && message.isEmpty()) {
-              message.append("Course info updated")
+            val message = buildString {
+              if (!newLessons.isEmpty()) {
+                append(if (newLessons.size == 1) "One lesson pushed." else "Pushed: ${newLessons.size} lessons.")
+                append("\n")
+              }
+
+              if (!lessonsInfoToUpdate.isEmpty() || !lessonsToUpdate.isEmpty()) {
+                val size = lessonsInfoToUpdate.size + lessonsToUpdate.size
+                append(if (size == 1) "One lesson updated" else "Updated: $size lessons")
+              }
+
+              if (isCourseInfoChanged && this.isEmpty()) {
+                append("Course info updated")
+              }
             }
             val title = if (message.isEmpty()) "Course is up to date" else "Course updated"
-            CCStepikConnector.showNotification(project, title, message.toString(), "See on Stepik", {
-              BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + course.id)
-            })
+            CCStepikConnector.showNotification(project, title, message, seeOnStepikAction("/course/" + course.id))
           }
         }
       }
@@ -186,7 +185,7 @@ class StepikCourseUploader(private val project: Project) {
                          totalSize: Int) {
     tasksToUpdateByLessonIndex[lesson.index]!!.forEach { task ->
       if (showVerboseProgress) {
-        progressIndicator.fraction = (taskNumber / totalSize).toDouble()
+        progressIndicator.fraction = taskNumber.toDouble() / totalSize
       }
       progressIndicator.text2 = "Updating task: ${task.name}"
       CCStepikConnector.updateTask(project, task, false)
@@ -200,7 +199,7 @@ class StepikCourseUploader(private val project: Project) {
                          totalSize: Int): Int {
     tasksToPostByLessonIndex[lesson.index]!!.forEach { task ->
       if (showVerboseProgress) {
-        progressIndicator.fraction = (taskNumber / totalSize).toDouble()
+        progressIndicator.fraction = taskNumber.toDouble() / totalSize
       }
       progressIndicator.text2 = "Posting task: ${task.name}"
       CCStepikConnector.postTask(project, task, lesson.id)
@@ -243,7 +242,7 @@ class StepikCourseUploader(private val project: Project) {
 
   private fun tasksToUpdate(lessonFormServer: Lesson, updateCandidate: Lesson): List<Task> {
     val onServerTaskIds = taskIds(lessonFormServer)
-    val tasksUpdateCandidate = updateCandidate.taskList.filter { task -> onServerTaskIds.contains(task.stepId) }
+    val tasksUpdateCandidate = updateCandidate.taskList.filter { task -> task.stepId in onServerTaskIds }
 
     val taskById = lessonFormServer.taskList.associateBy({ it.stepId }, { it })
     return tasksUpdateCandidate.filter { it != taskById[it.stepId] }
@@ -251,30 +250,15 @@ class StepikCourseUploader(private val project: Project) {
 
   private fun lessonsInfoToUpdate(course: Course,
                                   serverLessonIds: List<Int>,
-                                  latestCourseFromServer: RemoteCourse): ArrayList<Lesson> {
-    val updateCandidates = course.lessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
-    val toUpdateInfo = ArrayList<Lesson>()
-    val lessonsById = latestCourseFromServer.lessons.associateBy ( { it.id }, {it} )
-    for (updateCandidate in updateCandidates) {
-      val lessonFormServer = lessonsById[updateCandidate.id]
-
-      if (lessonFormServer!!.index != updateCandidate.index) {
-        toUpdateInfo.add(updateCandidate)
-        continue
+                                  latestCourseFromServer: RemoteCourse): List<Lesson> {
+    return course.lessons
+      .filter { lesson -> serverLessonIds.contains(lesson.id) }
+      .filter { updateCandidate ->
+        val lessonFormServer = latestCourseFromServer.getLesson(updateCandidate.id)
+        lessonFormServer.index != updateCandidate.index ||
+        lessonFormServer.name != updateCandidate.name ||
+        lessonFormServer.isPublic != updateCandidate.isPublic
       }
-
-      if (lessonFormServer.name != updateCandidate.name) {
-        toUpdateInfo.add(updateCandidate)
-        continue
-      }
-
-      if (lessonFormServer.isPublic != updateCandidate.isPublic) {
-        toUpdateInfo.add(updateCandidate)
-        continue
-      }
-    }
-
-    return toUpdateInfo
   }
 }
 

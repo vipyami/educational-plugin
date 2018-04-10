@@ -1,6 +1,5 @@
 package com.jetbrains.edu.coursecreator.actions.stepik;
 
-import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.IdeView;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -99,8 +98,7 @@ public class CCPushTask extends DumbAwareAction {
             int lessonIndex = task.getLesson().getIndex();
             StudyTaskManager.getInstance(project).latestCourseFromServer.getLessons().get(lessonIndex - 1).getTaskList().add(task.getIndex() - 1, task);
             CCStepikConnector.showNotification(project, "Task uploaded", "Task " + task.getName() + " uploaded",
-                                               "See on Stepik",
-                                               () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/lesson/" + task.getLesson().getId() + "/step/" + task.getIndex()));
+                                               CCStepikConnector.seeOnStepikAction("/lesson/" + task.getLesson().getId() + "/step/" + task.getIndex()));
           }
           else {
             CCStepikConnector.showErrorNotification(project, "Error uploading task", "Task " + task.getName() + "wasn't uploaded");
@@ -114,8 +112,7 @@ public class CCPushTask extends DumbAwareAction {
             StudyTaskManager.getInstance(project).latestCourseFromServer.getLesson(lessonIndex).getTaskList().set(task.getIndex() - 1, task);
             StudyTaskManager.getInstance(project).latestCourseFromServer.getLessons().set(lesson.getIndex(), lesson);
             CCStepikConnector.showNotification(project, "Task updated", "Task " + task.getName() + " updated",
-                                               "See on Stepik",
-                                               () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/lesson/" + lessonId + "/step/" + task.getIndex()));
+                                               CCStepikConnector.seeOnStepikAction("/lesson/" + lessonId + "/step/" + task.getIndex()));
           }
           else {
             CCStepikConnector.showErrorNotification(project, "Error updating task", "Task " + task.getName() + "wasn't updated");
