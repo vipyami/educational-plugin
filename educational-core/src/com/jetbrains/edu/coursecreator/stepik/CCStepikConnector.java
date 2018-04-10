@@ -648,7 +648,7 @@ public class CCStepikConnector {
   }
 
   public static AnAction seeOnStepikAction(@NotNull String url) {
-    return new AnAction() {
+    return new AnAction("See on Stepik") {
       @Override
       public void actionPerformed(AnActionEvent e) {
         BrowserUtil.browse(StepikNames.STEPIK_URL + url);
