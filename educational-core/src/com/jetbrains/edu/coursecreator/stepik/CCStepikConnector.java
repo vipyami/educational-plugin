@@ -139,7 +139,7 @@ public class CCStepikConnector {
       ApplicationManager.getApplication().runReadAction(() -> postAdditionalFiles(course, project, courseOnRemote.getId(), finalSectionCount + 1));
       StudyTaskManager.getInstance(project).setCourse(courseOnRemote);
       StudyTaskManager.getInstance(project).latestCourseFromServer = (RemoteCourse)courseOnRemote.copy();
-      showNotification(project, "Course published", "","See on Stepik", () -> BrowserUtil.browse(StepikNames.STEPIK_URL + "/course/" + courseOnRemote.getId()));
+      showNotification(project, "Course published", "",seeOnStepikAction("/course/" + courseOnRemote.getId()));
     }
     catch (IOException e) {
       LOG.error(e.getMessage());
@@ -254,7 +254,7 @@ public class CCStepikConnector {
   }
 
   public static int postUnit(int lessonId, int position, int sectionId, Project project) {
-    if (!checkIfAuthorized(project, "postTask")) return lessonId;
+    if (!checkIfAuthorized(project, "postUnit")) return lessonId;
 
     final HttpPost request = new HttpPost(StepikNames.STEPIK_API_URL + StepikNames.UNITS);
     final StepikWrappers.UnitWrapper unitWrapper = new StepikWrappers.UnitWrapper();
@@ -297,7 +297,7 @@ public class CCStepikConnector {
   }
 
   public static void updateUnit(int unitId, int lessonId, int position, int sectionId, Project project) {
-    if (!checkIfAuthorized(project, "postTask")) return;
+    if (!checkIfAuthorized(project, "updateUnit")) return;
 
     final HttpPut request = new HttpPut(StepikNames.STEPIK_API_URL + StepikNames.UNITS + "/" + unitId);
     final StepikWrappers.UnitWrapper unitWrapper = new StepikWrappers.UnitWrapper();
@@ -404,10 +404,7 @@ public class CCStepikConnector {
       final StatusLine line = response.getStatusLine();
       switch (line.getStatusCode()) {
         case HttpStatus.SC_OK:
-          if (showNotification) {
-            return true;
-          }
-          break;
+          return true;
         case HttpStatus.SC_NOT_FOUND:
           // TODO: support case when lesson was removed from Stepik too
           return postTask(project, task, task.getLesson().getId());
@@ -590,19 +587,22 @@ public class CCStepikConnector {
   public static void showNotification(@NotNull Project project,
                                       @NotNull String title,
                                       @NotNull String message,
-                                      @Nullable String actionName,
-                                      @Nullable Runnable action) {
+                                      @Nullable AnAction action) {
     final Notification notification =
       new Notification("Push.course", title, message, NotificationType.INFORMATION);
-    if (actionName != null && action != null) {
-      notification.addAction(new AnAction(actionName) {
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-          action.run();
-        }
-      });
+    if (action != null) {
+      notification.addAction(action);
     }
     notification.notify(project);
+  }
+
+  public static AnAction seeOnStepikAction(@NotNull String url) {
+    return new AnAction("See on Stepik") {
+      @Override
+      public void actionPerformed(AnActionEvent e) {
+        BrowserUtil.browse(StepikNames.STEPIK_URL + url);
+      }
+    };
   }
 
   private static void showStepikNotification(@NotNull Project project,
