@@ -7,23 +7,18 @@ import com.intellij.openapi.application.invokeAndWaitIfNeed
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
-import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.EduUtils.synchronize
-import com.jetbrains.edu.learning.courseFormat.CheckStatus
-import com.jetbrains.edu.learning.courseFormat.Course
-import com.jetbrains.edu.learning.courseFormat.Lesson
-import com.jetbrains.edu.learning.courseFormat.RemoteCourse
+import com.jetbrains.edu.learning.courseFormat.*
+import com.jetbrains.edu.learning.courseFormat.ext.configurator
 import com.jetbrains.edu.learning.courseFormat.tasks.ChoiceTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.courseFormat.tasks.TheoryTask
 import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourse
 import com.jetbrains.edu.learning.stepik.StepikConnector.getCourseFromStepik
-import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.IOException
 import java.net.URISyntaxException
 import java.util.*
@@ -34,31 +29,42 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   private var updatedTasksNumber: Int = 0
 
   private val oldLessonDirectories = HashMap<Int, VirtualFile>()
+  private val oldSectionDirectories = HashMap<Int, VirtualFile>()
 
   fun updateCourse() {
     oldLessonDirectories.clear()
+    oldSectionDirectories.clear()
     val courseFromServer = courseFromServer(project, course)
     if (courseFromServer == null) {
       LOG.warn("Course ${course.id} not found on Stepik")
       return
     }
 
-    courseFromServer.lessons.withIndex().forEach({ (index, lesson) -> lesson.index = index + 1 })
-
-    val newLessons = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) == null }
-    if (!newLessons.isEmpty()) {
-      createNewLessons(project, newLessons)
+    val newSections= courseFromServer.sections.filter { section -> section.id !in course.sectionIds }
+    if (!newSections.isEmpty()) {
+      createNewSections(project, newSections)
     }
-    val updateLessonsNumber = updateLessons(courseFromServer)
+    val sectionsToUpdate = courseFromServer.sections.filter { section -> section.id in course.sectionIds }
+    updateSections(sectionsToUpdate)
 
-    course.lessons = courseFromServer.lessons
+    courseFromServer.topLevelLessons.withIndex().forEach({ (index, lesson) -> lesson.index = index + 1 })
+
+    //update top level lessons
+    val newLessons = courseFromServer.topLevelLessons.filter { course.getLesson(it.id) == null }
+    if (!newLessons.isEmpty()) {
+      createNewLessons(project, newLessons, project.baseDir)
+    }
+    val updateLessonsNumber = updateLessons(
+      courseFromServer.topLevelLessons.filter { course.getLesson(it.id) != null },
+      course)
+    course.items = courseFromServer.items
     setCourseInfo(courseFromServer)
     runInEdt {
       synchronize()
       ProjectView.getInstance(project).refresh()
       showNotification(newLessons, updateLessonsNumber)
       // TODO: use method from Katya's section changes
-      ExternalSystemUtil.refreshProjects(project, GradleConstants.SYSTEM_ID, true, ProgressExecutionMode.MODAL_SYNC)
+      course.configurator?.courseBuilder?.refreshProject(project)
     }
   }
 
@@ -86,33 +92,58 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   }
 
   @Throws(URISyntaxException::class, IOException::class)
-  private fun updateLessons(courseFromServer: Course): Int {
-    val lessonsFromServer = courseFromServer.lessons.filter { lesson -> course.getLesson(lesson.id) != null }
+  private fun updateLessons(lessonsFromServer: List<Lesson>,
+                            parent: ItemContainer): Int {
     var updatedLessonsNumber = 0
     for (lessonFromServer in lessonsFromServer) {
       updatedLessonsNumber++
-      val currentLesson = course.getLesson(lessonFromServer.id)
-      val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson)
+      val currentLesson = parent.getLesson(lessonFromServer.id)
+      val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson!!)
       lessonFromServer.taskList.withIndex().forEach { (index, task) -> task.index = index + 1 }
-      val lessonDir = getLessonDir(lessonFromServer)
+      val lessonDir = getLessonDir(lessonFromServer, parent)
       val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
-      if (taskIdsToUpdate.isEmpty()) {
-        if (currentLesson.name != lessonFromServer.name) {
-          val currentLessonDir = getLessonDir(currentLesson)
-          invokeAndWaitIfNeed { runWriteAction { currentLessonDir?.rename(this, lessonFromServer.name) } }
-        }
+      if (currentLesson.name != lessonFromServer.name) {
+        val currentLessonDir = getLessonDir(currentLesson, parent)
+        invokeAndWaitIfNeed { runWriteAction { currentLessonDir?.rename(this, lessonFromServer.name) } }
       }
-      else {
+      if (!taskIdsToUpdate.isEmpty()) {
         updatedTasksNumber += taskIdsToUpdate.size
         updateTasks(taskIdsToUpdate, lessonFromServer, currentLesson, updatedTasks, lessonDir)
       }
 
       updatedTasks.sortBy { task -> task.index }
       lessonFromServer.taskList = updatedTasks
-      lessonFromServer.initLesson(course, false)
+      lessonFromServer.init(course, lessonFromServer.section, false)
     }
     return updatedLessonsNumber
   }
+
+  @Throws(URISyntaxException::class, IOException::class)
+  private fun updateSections(sectionsFromServer: List<Section>): Int {
+    var updated = 0
+    val sectionsById = course.sections.associateBy({ it.id }, { it })
+    for (sectionFromServer in sectionsFromServer) {
+      updated++
+
+      val currentSection = sectionsById[sectionFromServer.id]
+      val currentSectionDir = getSectionDir(currentSection!!)
+      //set section info
+      currentSection.index = sectionFromServer.index
+      if (currentSection.name != sectionFromServer.name) {
+        invokeAndWaitIfNeed { runWriteAction { currentSectionDir?.rename(this, sectionFromServer.name) } }
+      }
+      val currentLessons = currentSection.lessons.map { it.id }
+      val newLessons = sectionFromServer.lessons.filter { it.id !in currentLessons}
+      if (!newLessons.isEmpty()) {
+        createNewLessons(project, newLessons, project.baseDir.findChild(sectionFromServer.name)!!)
+      }
+
+      val lessonsToUpdate = sectionFromServer.lessons.filter { it.id in currentLessons }
+      updateLessons(lessonsToUpdate, sectionFromServer)
+    }
+    return updated
+  }
+
 
   private fun updateTasks(taskIdsToUpdate: List<Int>,
                           lessonFromServer: Lesson,
@@ -137,7 +168,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
         }
       }
 
-      taskFromServer.initTask(currentLesson, false)
+      taskFromServer.init(course, currentLesson, false)
 
       createTaskDirectories(lessonDir!!, taskFromServer)
       updatedTasks.add(taskFromServer)
@@ -187,33 +218,44 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       .map { (_, taskId) -> Integer.parseInt(taskId) }
   }
 
-  @Throws(IOException::class)
+
   private fun createNewLessons(project: Project,
-                               newLessons: List<Lesson>): List<Lesson> {
+                               newLessons: List<Lesson>,
+                               parentDir: VirtualFile) {
     for (lesson in newLessons) {
-      val baseDir = project.baseDir
-      val lessonDir = baseDir.findChild(lesson.name)
+      val lessonDir = lesson.getLessonDir(project)
       if (lessonDir != null) {
-        saveDirectory(lessonDir)
+        saveLessonDirectory(lessonDir)
       }
 
-      lesson.initLesson(course, false)
-      GeneratorUtils.createLesson(lesson, project.baseDir)
+      lesson.init(course, lesson.section, false)
+      GeneratorUtils.createLesson(lesson, parentDir)
     }
-    return newLessons
   }
 
-  private fun getLessonDir(lesson: Lesson): VirtualFile? {
-    val baseDir = project.baseDir
-    val lessonDir = baseDir.findChild(lesson.name)
+  private fun createNewSections(project: Project,
+                               newSections: List<Section>){
+    for (section in newSections) {
+      val baseDir = project.baseDir
+      val sectionDir = baseDir.findChild(section.name)
+      if (sectionDir != null) {
+        saveSectionDirectory(sectionDir)
+      }
+      section.init(course, course, false)
+      GeneratorUtils.createSection(section, project.baseDir)
+    }
+  }
 
-    val currentLesson = course.getLesson(lesson.id)
+  private fun getLessonDir(lesson: Lesson,
+                           parent: ItemContainer): VirtualFile? {
+    val lessonDir =lesson.getLessonDir(project)
+    val currentLesson = parent.getLesson(lesson.id)
 
-    if (currentLesson.index == lesson.index) {
+    if (currentLesson!!.index == lesson.index && currentLesson.name == lesson.name) {
       return lessonDir
     }
     if (lessonDir != null) {
-      saveDirectory(lessonDir)
+      saveLessonDirectory(lessonDir)
     }
 
     if (oldLessonDirectories.containsKey(lesson.id)) {
@@ -232,7 +274,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       return savedDir
     }
     else {
-      val oldLessonDir = baseDir.findChild(currentLesson.name)
+      val oldLessonDir = currentLesson.getLessonDir(project)
       invokeAndWaitIfNeed {
         runWriteAction {
           try {
@@ -247,8 +289,51 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
   }
 
+  private fun getSectionDir(section: Section): VirtualFile? {
+    val baseDir = project.baseDir
+    val sectionDir = baseDir.findChild(section.name)
+    val currentSection = course.getSection(section.name)
 
-  private fun saveDirectory(lessonDir: VirtualFile) {
+    if (currentSection!!.index == section.index && currentSection.name == section.name) {
+      return sectionDir
+    }
+    if (sectionDir != null) {
+      saveSectionDirectory(sectionDir)
+    }
+
+    if (oldSectionDirectories.containsKey(section.id)) {
+      val savedDir = oldSectionDirectories[section.id]
+      invokeAndWaitIfNeed {
+        runWriteAction {
+          try {
+            savedDir!!.rename(this, section.name)
+            oldSectionDirectories.remove(section.id)
+          }
+          catch (e: IOException) {
+            LOG.warn(e.message)
+          }
+        }
+      }
+      return savedDir
+    }
+    else {
+      val oldSectionDir = baseDir.findChild(currentSection.name)
+      invokeAndWaitIfNeed {
+        runWriteAction {
+          try {
+            oldSectionDir!!.rename(this, section.name)
+          }
+          catch (e: IOException) {
+            LOG.warn(e.message)
+          }
+        }
+      }
+      return oldSectionDir
+    }
+  }
+
+
+  private fun saveLessonDirectory(lessonDir: VirtualFile) {
     val lessonForDirectory = course.getLesson(lessonDir.nameWithoutExtension)
 
     invokeAndWaitIfNeed {
@@ -256,6 +341,22 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
         try {
           lessonDir.rename(lessonForDirectory, "old_${lessonDir.name}")
           oldLessonDirectories[lessonForDirectory!!.id] = lessonDir
+        }
+        catch (e: IOException) {
+          LOG.warn(e.message)
+        }
+      }
+    }
+  }
+
+  private fun saveSectionDirectory(sectionDir: VirtualFile) {
+    val sectionForDirectory = course.getSection(sectionDir.nameWithoutExtension)
+
+    invokeAndWaitIfNeed {
+      runWriteAction {
+        try {
+          sectionDir.rename(sectionForDirectory, "old_${sectionDir.name}")
+          oldSectionDirectories[sectionForDirectory!!.id] = sectionDir
         }
         catch (e: IOException) {
           LOG.warn(e.message)

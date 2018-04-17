@@ -59,6 +59,11 @@ public class Course extends ItemContainer {
     return withAdditional ? lessons : lessons.stream().filter(lesson -> !lesson.isAdditional()).collect(Collectors.toList());
   }
 
+  public List<Lesson> getTopLevelLessons() {
+    final List<Lesson> lessons = items.stream().filter(Lesson.class::isInstance).map(Lesson.class::cast).collect(Collectors.toList());
+    return lessons.stream().filter(lesson -> !lesson.isAdditional()).collect(Collectors.toList());
+  }
+
   public void addSection(@NotNull Section section) {
     items.add(section);
   }

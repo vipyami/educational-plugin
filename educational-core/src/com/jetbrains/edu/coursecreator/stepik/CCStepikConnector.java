@@ -471,7 +471,7 @@ public class CCStepikConnector {
     AtomicBoolean additionalMaterialsUpdated = new AtomicBoolean(false);
     for (Integer sectionId : sectionsIds) {
       final Section section = StepikConnector.getSection(sectionId);
-      if (section != null && StepikNames.PYCHARM_ADDITIONAL.equals(section.getName())) {
+      if (StepikNames.PYCHARM_ADDITIONAL.equals(section.getName())) {
         final List<Lesson> lessons = StepikConnector.getLessons(course, sectionId);
         lessons.stream()
                 .filter(Lesson::isAdditional)

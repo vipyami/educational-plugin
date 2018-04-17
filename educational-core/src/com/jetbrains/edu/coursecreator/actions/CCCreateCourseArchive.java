@@ -146,7 +146,7 @@ public class CCCreateCourseArchive extends DumbAwareAction {
       }
 
       private void replaceAnswerFilesWithTaskFiles(@NotNull Course courseCopy) {
-        courseCopy.visitLessons((lesson, index) -> {
+        courseCopy.visitLessons((lesson) -> {
           final VirtualFile lessonDir = baseDir.findChild(lesson.getName());
           if (lessonDir == null) return true;
           for (Task task : lesson.getTaskList()) {

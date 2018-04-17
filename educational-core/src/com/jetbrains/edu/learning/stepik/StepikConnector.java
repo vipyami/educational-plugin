@@ -138,13 +138,8 @@ public class StepikConnector {
   }
 
   public static Date getCourseUpdateDate(final int courseId) {
-    RemoteCourse course = null;
-    try {
-      course = getCourseFromStepik(EduSettings.getInstance().getUser(), courseId, true);
-    }
-    catch (IOException e) {
-      LOG.warn(e);
-    }
+    RemoteCourse course = getCourseFromStepik(EduSettings.getInstance().getUser(), courseId, true);
+
     return course == null ? null : course.getUpdateDate();
   }
 
@@ -262,18 +257,19 @@ public class StepikConnector {
   }
 
   @Nullable
-  public static RemoteCourse getCourseFromStepik(@Nullable StepicUser user, int courseId, boolean isIdeaCompatible) throws IOException {
+  public static RemoteCourse getCourseFromStepik(@Nullable StepicUser user, int courseId, boolean isIdeaCompatible) {
     final URI url;
+    final CoursesContainer coursesContainer;
     try {
       url = new URIBuilder(StepikNames.COURSES + "/" + courseId)
         .addParameter("is_idea_compatible", String.valueOf(isIdeaCompatible))
         .build();
+      coursesContainer = getCoursesFromStepik(user, url);
     }
-    catch (URISyntaxException e) {
+    catch (URISyntaxException | IOException e) {
       LOG.error(e.getMessage());
       return null;
     }
-    final CoursesContainer coursesContainer = getCoursesFromStepik(user, url);
 
     if (coursesContainer != null && !coursesContainer.courses.isEmpty()) {
       return coursesContainer.courses.get(0);
@@ -928,6 +924,7 @@ public class StepikConnector {
     return new Unit();
   }
 
+  @NotNull
   public static Section getSection(int sectionId) {
     try {
       List<Section> sections =
@@ -940,6 +937,10 @@ public class StepikConnector {
       LOG.warn("Failed getting section: " + sectionId);
     }
     return new Section();
+  }
+
+  public static Date getSectionUpdateDate(int sectionId) {
+    return getSection(sectionId).getUpdateDate();
   }
 
   public static Lesson getLesson(int lessonId) {

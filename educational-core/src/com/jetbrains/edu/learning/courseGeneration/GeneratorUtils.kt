@@ -18,11 +18,7 @@ import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduUtils
 import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.*
-import com.jetbrains.edu.learning.courseFormat.ext.course
-import com.jetbrains.edu.learning.courseFormat.ext.project
-import com.jetbrains.edu.learning.courseFormat.ext.dirName
-import com.jetbrains.edu.learning.courseFormat.ext.isFrameworkTask
-import com.jetbrains.edu.learning.courseFormat.ext.testTextMap
+import com.jetbrains.edu.learning.courseFormat.ext.*
 import com.jetbrains.edu.learning.courseFormat.tasks.CodeTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.intellij.EduIntellijUtils
@@ -63,7 +59,7 @@ object GeneratorUtils {
     course.removeAdditionalLesson()
   }
 
-  private fun createSection(item: Section, baseDir: VirtualFile) {
+  fun createSection(item: Section, baseDir: VirtualFile) {
     val sectionDir = createUniqueDir(baseDir, item)
 
     for ((i, lesson) in item.lessons.withIndex()) {
@@ -243,7 +239,7 @@ object GeneratorUtils {
   }
 
   private fun updateJavaCodeTaskFileNames(project: Project, course: Course) {
-    course.visitLessons { lesson, _ ->
+    course.visitLessons { lesson ->
       for (task in lesson.getTaskList()) {
         if (task is CodeTask) {
           for (taskFile in task.getTaskFiles().values) {

@@ -257,7 +257,7 @@ class StepikCourseUploader(private val project: Project) {
       .filter { lesson -> serverLessonIds.contains(lesson.id) }
       .filter { updateCandidate ->
         val lessonFormServer = latestCourseFromServer.getLesson(updateCandidate.id)
-        lessonFormServer.index != updateCandidate.index ||
+        lessonFormServer!!.index != updateCandidate.index ||
         lessonFormServer.name != updateCandidate.name ||
         lessonFormServer.isPublic != updateCandidate.isPublic
       }
