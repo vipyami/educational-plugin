@@ -65,10 +65,10 @@ class StepikCourseUploader(private val project: Project) {
     }
   }
 
-  private fun taskIds(lessonFormServer: Lesson) = lessonFormServer.taskList.map { task -> task.stepId }
+  private fun taskIds(lessonFromServer: Lesson) = lessonFromServer.taskList.map { task -> task.stepId }
 
-  private fun newTasks(lessonFormServer: Lesson, updateCandidate: Lesson): List<Task> {
-    val onServerTaskIds = taskIds(lessonFormServer)
+  private fun newTasks(lessonFromServer: Lesson, updateCandidate: Lesson): List<Task> {
+    val onServerTaskIds = taskIds(lessonFromServer)
     return updateCandidate.taskList.filter { task -> !onServerTaskIds.contains(task.stepId) }
   }
 
@@ -242,11 +242,11 @@ class StepikCourseUploader(private val project: Project) {
 
   private fun showVerboseProgress(totalSize: Int) = totalSize > 1
 
-  private fun tasksToUpdate(lessonFormServer: Lesson, updateCandidate: Lesson): List<Task> {
-    val onServerTaskIds = taskIds(lessonFormServer)
+  private fun tasksToUpdate(lessonFromServer: Lesson, updateCandidate: Lesson): List<Task> {
+    val onServerTaskIds = taskIds(lessonFromServer)
     val tasksUpdateCandidate = updateCandidate.taskList.filter { task -> task.stepId in onServerTaskIds }
 
-    val taskById = lessonFormServer.taskList.associateBy({ it.stepId }, { it })
+    val taskById = lessonFromServer.taskList.associateBy({ it.stepId }, { it })
     return tasksUpdateCandidate.filter { it != taskById[it.stepId] }
   }
 
@@ -256,10 +256,10 @@ class StepikCourseUploader(private val project: Project) {
     return course.lessons
       .filter { lesson -> serverLessonIds.contains(lesson.id) }
       .filter { updateCandidate ->
-        val lessonFormServer = latestCourseFromServer.getLesson(updateCandidate.id)
-        lessonFormServer!!.index != updateCandidate.index ||
-        lessonFormServer.name != updateCandidate.name ||
-        lessonFormServer.isPublic != updateCandidate.isPublic
+        val lessonFromServer = latestCourseFromServer.getLesson(updateCandidate.id)
+        lessonFromServer!!.index != updateCandidate.index ||
+        lessonFromServer.name != updateCandidate.name ||
+        lessonFromServer.isPublic != updateCandidate.isPublic
       }
   }
 }
