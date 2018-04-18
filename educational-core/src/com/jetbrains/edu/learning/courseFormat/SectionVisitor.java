@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public interface SectionVisitor {
 
   /**
-   * @return true to continue visiting lessons, false -- to abort
+   * @return true to continue visiting sections, false -- to abort
    */
   boolean visit(@NotNull Section lesson);
 }

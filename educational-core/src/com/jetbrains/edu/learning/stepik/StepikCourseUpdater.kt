@@ -63,7 +63,6 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       synchronize()
       ProjectView.getInstance(project).refresh()
       showNotification(newLessons, updateLessonsNumber)
-      // TODO: use method from Katya's section changes
       course.configurator?.courseBuilder?.refreshProject(project)
     }
   }
