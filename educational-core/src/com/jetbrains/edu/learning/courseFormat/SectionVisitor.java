@@ -9,6 +9,6 @@ public interface SectionVisitor {
   /**
    * @return true to continue visiting sections, false -- to abort
    */
-  boolean visit(@NotNull Section lesson);
+  boolean visit(@NotNull Section section);
 }
 
