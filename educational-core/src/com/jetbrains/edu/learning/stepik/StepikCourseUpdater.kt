@@ -47,7 +47,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     val sectionsToUpdate = courseFromServer.sections.filter { section -> section.id in course.sectionIds }
     updateSections(sectionsToUpdate)
 
-    courseFromServer.lessons.withIndex().forEach({ (index, lesson) -> lesson.index = index + 1 })
+    courseFromServer.items.withIndex().forEach({ (index, lesson) -> lesson.index = index + 1 })
 
     //update top level lessons
     val newLessons = courseFromServer.lessons.filter { course.getLesson(it.id) == null }
