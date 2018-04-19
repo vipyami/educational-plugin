@@ -543,7 +543,7 @@ public class EduUtils {
     return null;
   }
 
-  @Nullable
+  @NotNull
   public static VirtualFile getCourseDir(@NotNull Project project) {
     if (!ApplicationManager.getApplication().isUnitTestMode()) {
       return project.getBaseDir();

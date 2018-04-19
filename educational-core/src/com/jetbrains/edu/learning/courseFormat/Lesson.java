@@ -178,18 +178,17 @@ public class Lesson extends StudyItem {
   @Nullable
   public VirtualFile getLessonDir(@NotNull final Project project) {
     VirtualFile courseDir = EduUtils.getCourseDir(project);
-    if (courseDir != null) {
-      if (mySection == null) {
-        return courseDir.findChild(getName());
-      }
-      else {
-        VirtualFile sectionDir = courseDir.findChild(mySection.getName());
-        if (sectionDir != null) {
-          return  sectionDir.findChild(getName());
-        }
-      }
+    assert courseDir != null : "Course dir for lesson not found";
+
+    if (mySection == null) {
+      return courseDir.findChild(getName());
     }
-    return null;
+    else {
+      VirtualFile sectionDir = courseDir.findChild(mySection.getName());
+      assert sectionDir != null : "Section dir for lesson not found";
+
+      return  sectionDir.findChild(getName());
+    }
   }
 
   @NotNull
