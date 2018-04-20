@@ -26,7 +26,6 @@ import kotlin.collections.ArrayList
 
 class StepikCourseUpdater(private val course: RemoteCourse, private val project: Project) {
   private val LOG = Logger.getInstance(this.javaClass)
-  private var updatedTasksNumber: Int = 0
 
   private val oldLessonDirectories = HashMap<Int, VirtualFile>()
   private val oldSectionDirectories = HashMap<Int, VirtualFile>()
@@ -52,9 +51,9 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     //update top level lessons
     val newLessons = courseFromServer.lessons.filter { course.getLesson(it.id) == null }
     if (!newLessons.isEmpty()) {
-      createNewLessons(project, newLessons, project.baseDir)
+      createNewLessons(newLessons, project.baseDir)
     }
-    val updateLessonsNumber = updateLessons(
+    val lessonsUpdated = updateLessons(
       courseFromServer.lessons.filter { course.getLesson(it.id) != null },
       course)
     course.items = courseFromServer.items
@@ -62,7 +61,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     runInEdt {
       synchronize()
       ProjectView.getInstance(project).refresh()
-      showNotification(newLessons, updateLessonsNumber)
+      showNotification(newLessons.size, lessonsUpdated)
       course.configurator?.courseBuilder?.refreshProject(project)
     }
   }
@@ -72,11 +71,11 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     course.description = courseFromServer.description
   }
 
-  private fun showNotification(newLessons: List<Lesson>,
+  private fun showNotification(newLessons: Int,
                                updateLessonsNumber: Int) {
     val message = buildString {
-      if (!newLessons.isEmpty()) {
-        append(if (newLessons.size > 1) "Loaded ${newLessons.size} new lessons" else "Loaded one new lesson")
+      if (newLessons > 0) {
+        append(if (newLessons > 1) "Loaded ${newLessons} new lessons" else "Loaded one new lesson")
         append("\n")
       }
 
@@ -91,22 +90,20 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   }
 
   @Throws(URISyntaxException::class, IOException::class)
-  private fun updateLessons(lessonsFromServer: List<Lesson>,
-                            parent: ItemContainer): Int {
-    var updatedLessonsNumber = 0
+  private fun updateLessons(lessonsFromServer: List<Lesson>, parent: ItemContainer): Int {
+    var lessonsUpdated = 0
     for (lessonFromServer in lessonsFromServer) {
-      updatedLessonsNumber++
-      val currentLesson = parent.getLesson(lessonFromServer.id)
-      val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson!!)
       lessonFromServer.taskList.withIndex().forEach { (index, task) -> task.index = index + 1 }
-      val lessonDir = getLessonDir(lessonFromServer, parent)
+
+      val currentLesson = parent.getLesson(lessonFromServer.id)
+
+      val taskIdsToUpdate = taskIdsToUpdate(lessonFromServer, currentLesson!!)
+
       val updatedTasks = ArrayList(upToDateTasks(currentLesson, taskIdsToUpdate))
-      if (currentLesson.name != lessonFromServer.name) {
-        val currentLessonDir = getLessonDir(currentLesson, parent)
-        invokeAndWaitIfNeed { runWriteAction { currentLessonDir?.rename(this, lessonFromServer.name) } }
-      }
+
       if (!taskIdsToUpdate.isEmpty()) {
-        updatedTasksNumber += taskIdsToUpdate.size
+        lessonsUpdated++
+        val lessonDir = getDir(lessonFromServer, parent.getLesson(lessonFromServer.id)!!)
         updateTasks(taskIdsToUpdate, lessonFromServer, currentLesson, updatedTasks, lessonDir)
       }
 
@@ -114,35 +111,29 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
       lessonFromServer.taskList = updatedTasks
       lessonFromServer.init(course, lessonFromServer.section, false)
     }
-    return updatedLessonsNumber
+    return lessonsUpdated
   }
 
   @Throws(URISyntaxException::class, IOException::class)
-  private fun updateSections(sectionsFromServer: List<Section>): Int {
-    var updated = 0
+  private fun updateSections(sectionsFromServer: List<Section>) {
     val sectionsById = course.sections.associateBy({ it.id }, { it })
     for (sectionFromServer in sectionsFromServer) {
-      updated++
+      sectionFromServer.lessons.withIndex().forEach { (index, lesson) -> lesson.index = index + 1 }
 
       val currentSection = sectionsById[sectionFromServer.id]
-      val currentSectionDir = getSectionDir(currentSection!!)
-      //set section info
-      currentSection.index = sectionFromServer.index
-      if (currentSection.name != sectionFromServer.name) {
-        invokeAndWaitIfNeed { runWriteAction { currentSectionDir?.rename(this, sectionFromServer.name) } }
-      }
-      val currentLessons = currentSection.lessons.map { it.id }
+
+      val currentLessons = currentSection!!.lessons.map { it.id }
+
       val newLessons = sectionFromServer.lessons.filter { it.id !in currentLessons}
       if (!newLessons.isEmpty()) {
-        createNewLessons(project, newLessons, project.baseDir.findChild(sectionFromServer.name)!!)
+        val currentSectionDir = getDir(sectionFromServer, currentSection)
+        createNewLessons(newLessons, currentSectionDir)
       }
 
       val lessonsToUpdate = sectionFromServer.lessons.filter { it.id in currentLessons }
       updateLessons(lessonsToUpdate, sectionFromServer)
     }
-    return updated
   }
-
 
   private fun updateTasks(taskIdsToUpdate: List<Int>,
                           lessonFromServer: Lesson,
@@ -218,13 +209,10 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
   }
 
 
-  private fun createNewLessons(project: Project,
-                               newLessons: List<Lesson>,
-                               parentDir: VirtualFile) {
+  private fun createNewLessons(newLessons: List<Lesson>, parentDir: VirtualFile) {
     for (lesson in newLessons) {
-      val lessonDir = lesson.getLessonDir(project)
-      if (lessonDir != null) {
-        saveLessonDirectory(lessonDir)
+      if (directoryAlreadyExists(lesson.getLessonDir(project))) {
+        saveExistingDirectory(lesson)
       }
 
       lesson.init(course, lesson.section, false)
@@ -245,101 +233,73 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
   }
 
-  private fun getLessonDir(lesson: Lesson,
-                           parent: ItemContainer): VirtualFile? {
-    val lessonDir =lesson.getLessonDir(project)
-    val currentLesson = parent.getLesson(lesson.id)
-
-    if (currentLesson!!.index == lesson.index && currentLesson.name == lesson.name) {
-      return lessonDir
-    }
-    if (lessonDir != null) {
-      saveLessonDirectory(lessonDir)
-    }
-
-    if (oldLessonDirectories.containsKey(lesson.id)) {
-      val savedDir = oldLessonDirectories[lesson.id]
-      invokeAndWaitIfNeed {
-        runWriteAction {
-          try {
-            savedDir!!.rename(this, lesson.name)
-            oldLessonDirectories.remove(lesson.id)
-          }
-          catch (e: IOException) {
-            LOG.warn(e.message)
-          }
+  private fun rename(dirToRename: VirtualFile, s: String) {
+    invokeAndWaitIfNeed {
+      runWriteAction {
+        try {
+          dirToRename.rename(this, s)
+        }
+        catch (e: IOException) {
+          LOG.warn(e)
         }
       }
-      return savedDir
-    }
-    else {
-      val oldLessonDir = currentLesson.getLessonDir(project)
-      invokeAndWaitIfNeed {
-        runWriteAction {
-          try {
-            oldLessonDir!!.rename(this, lesson.name)
-          }
-          catch (e: IOException) {
-            LOG.warn(e.message)
-          }
-        }
-      }
-      return oldLessonDir
     }
   }
 
-  private fun getSectionDir(section: Section): VirtualFile? {
-    val baseDir = project.baseDir
-    val sectionDir = baseDir.findChild(section.name)
-    val currentSection = course.getSection(section.name)
+  private fun renamed(currentItem: StudyItem, newItem: StudyItem) = currentItem.name != newItem.name
 
-    if (currentSection!!.index == section.index && currentSection.name == section.name) {
-      return sectionDir
-    }
-    if (sectionDir != null) {
-      saveSectionDirectory(sectionDir)
+  private fun directoryAlreadyExists(directory: VirtualFile?): Boolean {
+    return directory != null
+  }
+
+  private fun getDir(newItem: StudyItem, currentItem: StudyItem): VirtualFile {
+    if (renamed(currentItem, newItem)) {
+      return itemDir(newItem)!!
     }
 
-    if (oldSectionDirectories.containsKey(section.id)) {
-      val savedDir = oldSectionDirectories[section.id]
-      invokeAndWaitIfNeed {
-        runWriteAction {
-          try {
-            savedDir!!.rename(this, section.name)
-            oldSectionDirectories.remove(section.id)
-          }
-          catch (e: IOException) {
-            LOG.warn(e.message)
-          }
-        }
-      }
-      return savedDir
+    if (directoryAlreadyExists(itemDir(newItem))) {
+      saveSectionDirectory(itemDir(newItem)!!)
+    }
+
+    val currentSectionDir = getCurrentItemDir(currentItem)
+    rename(currentSectionDir, newItem.name)
+
+    return currentSectionDir
+  }
+
+  private fun getCurrentItemDir(item: StudyItem): VirtualFile {
+    val dirsMap = if (item is Section) oldSectionDirectories else oldLessonDirectories
+    val id = (item as? Section)?.id ?: (item as Lesson).id
+
+    return if (dirsMap.containsKey(id)) {
+      val savedDir = dirsMap[id]
+      dirsMap.remove(id)
+      savedDir!!
     }
     else {
-      val oldSectionDir = baseDir.findChild(currentSection.name)
-      invokeAndWaitIfNeed {
-        runWriteAction {
-          try {
-            oldSectionDir!!.rename(this, section.name)
-          }
-          catch (e: IOException) {
-            LOG.warn(e.message)
-          }
-        }
-      }
-      return oldSectionDir
+      val oldSectionDir = project.baseDir.findChild(item.name)
+      oldSectionDir!!
+    }
+  }
+
+  private fun itemDir(item: StudyItem): VirtualFile? {
+    return if (item is Section) {
+      project.baseDir.findChild(item.name)
+    }
+    else {
+      (item as Lesson).getLessonDir(project)
     }
   }
 
 
-  private fun saveLessonDirectory(lessonDir: VirtualFile) {
-    val lessonForDirectory = course.getLesson(lessonDir.nameWithoutExtension)
+  private fun saveExistingDirectory(lesson: Lesson) {
+    val lessonDir = lesson.getLessonDir(project)
 
     invokeAndWaitIfNeed {
       runWriteAction {
         try {
-          lessonDir.rename(lessonForDirectory, "old_${lessonDir.name}")
-          oldLessonDirectories[lessonForDirectory!!.id] = lessonDir
+          lessonDir!!.rename(lesson, "old_${lessonDir.name}")
+          oldLessonDirectories[lesson.id] = lessonDir
         }
         catch (e: IOException) {
           LOG.warn(e.message)
