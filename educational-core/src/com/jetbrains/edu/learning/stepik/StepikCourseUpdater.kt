@@ -63,9 +63,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     if (!newLessons.isEmpty()) {
       createNewLessons(newLessons, project.baseDir)
     }
-    val lessonsUpdated = updateLessons(
-      courseFromServer.lessons.filter { course.getLesson(it.id) != null },
-      course)
+    val lessonsUpdated = updateLessons(courseFromServer.lessons.filter { course.getLesson(it.id) != null }, course)
     course.items = courseFromServer.items
     setCourseInfo(courseFromServer)
 
@@ -136,7 +134,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
 
       val currentLessons = currentSection!!.lessons.map { it.id }
 
-      val newLessons = sectionFromServer.lessons.filter { it.id !in currentLessons}
+      val newLessons = sectionFromServer.lessons.filter { it.id !in currentLessons }
       val sectionContentChanged = !newLessons.isEmpty()
       if (sectionContentChanged) {
         val currentSectionDir = constructDir(sectionFromServer, currentSection)
@@ -237,8 +235,7 @@ class StepikCourseUpdater(private val course: RemoteCourse, private val project:
     }
   }
 
-  private fun createNewSections(project: Project,
-                               newSections: List<Section>){
+  private fun createNewSections(project: Project, newSections: List<Section>) {
     for (section in newSections) {
       val baseDir = project.baseDir
       val sectionDir = baseDir.findChild(section.name)
