@@ -178,7 +178,6 @@ public class Lesson extends StudyItem {
   @Nullable
   public VirtualFile getLessonDir(@NotNull final Project project) {
     VirtualFile courseDir = EduUtils.getCourseDir(project);
-    assert courseDir != null : "Course dir for lesson not found";
 
     if (mySection == null) {
       return courseDir.findChild(getName());

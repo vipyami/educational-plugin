@@ -166,13 +166,9 @@ public abstract class Task extends StudyItem {
 
   @Nullable
   public VirtualFile getTaskDir(@NotNull final Project project) {
-    VirtualFile courseDir = EduUtils.getCourseDir(project);
-    assert courseDir != null : "Course dir for a task not found";
-
     final VirtualFile lessonDir = myLesson.getLessonDir(project);
-    assert lessonDir != null : "Lesson dir for a task not found";
 
-    return lessonDir.findChild(TaskExt.getDirName(this));
+    return lessonDir == null ? null : lessonDir.findChild(TaskExt.getDirName(this));
   }
 
   /**

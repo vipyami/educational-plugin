@@ -80,7 +80,8 @@ public class RemoteCourse extends Course {
     }
 
     int itemsWithoutAdditional = courseFromServer.sectionIds.size() - 1;
-    if (items.size() <= itemsWithoutAdditional) {
+    int itemsSize = getLessons(false).size() + getSections().size();
+    if (itemsSize < itemsWithoutAdditional) {
       return false;
     }
 
