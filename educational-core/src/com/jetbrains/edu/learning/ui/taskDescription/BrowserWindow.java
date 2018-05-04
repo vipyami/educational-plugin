@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.StreamUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ui.UIUtil;
@@ -94,7 +95,7 @@ public class BrowserWindow extends JFrame {
   private void updateIntellijAndGTKLaf() {
     Platform.runLater(() -> {
       final URL scrollBarStyleUrl = getClass().getResource("/style/javaFXBrowserScrollBar.css");
-      final URL engineStyleUrl = getClass().getResource("/style/javaFXBrowser.css");
+      final URL engineStyleUrl = getClass().getResource(getBrowserStylesheet(false));
       myPane.getStylesheets().add(scrollBarStyleUrl.toExternalForm());
       myEngine.setUserStyleSheetLocation(engineStyleUrl.toExternalForm());
       myPanel.getScene().getStylesheets().add(engineStyleUrl.toExternalForm());
@@ -104,7 +105,7 @@ public class BrowserWindow extends JFrame {
 
   private void updateLafDarcula() {
     Platform.runLater(() -> {
-      final URL engineStyleUrl = getClass().getResource("/style/javaFXBrowserDarcula.css");
+      final URL engineStyleUrl = getClass().getResource(getBrowserStylesheet(true));
       final URL scrollBarStyleUrl = getClass().getResource("/style/javaFXBrowserDarculaScrollBar.css");
       myEngine.setUserStyleSheetLocation(engineStyleUrl.toExternalForm());
       myPane.getStylesheets().add(scrollBarStyleUrl.toExternalForm());
@@ -112,6 +113,19 @@ public class BrowserWindow extends JFrame {
       myPanel.getScene().getStylesheets().add(engineStyleUrl.toExternalForm());
       myEngine.reload();
     });
+  }
+
+  @NotNull
+  private static String getBrowserStylesheet(boolean isDarcula) {
+    if (SystemInfo.isMac) {
+      return isDarcula ? "style/javaFXBrowserDarcula_mac.css" : "/style/javaFXBrowser_mac.css";
+    }
+
+    if (SystemInfo.isWindows) {
+      return isDarcula ? "style/javaFXBrowserDarcula_win.css" : "/style/javaFXBrowser_win.css";
+    }
+
+    return isDarcula ? "style/javaFXBrowserDarcula_linux.css" : "/style/javaFXBrowser_linux.css";
   }
 
   private void initComponents() {

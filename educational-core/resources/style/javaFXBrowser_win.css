@@ -1,0 +1,44 @@
+body {
+    margin-left: 16px;
+    margin-right: 0;
+    font-family: ".SF NS Text", sans-serif;
+    color: #1F1F1F;
+    font-size: 13px !important;
+    font-weight: normal;
+    line-height: 20px;
+}
+
+pre code {
+    font-family: "Menlo", monospace;
+    font-size: 12px !important;
+    line-height: 16px;
+    font-weight: normal;
+}
+
+.header {
+    font-size: 15pt;
+    font-weight: Bold;
+    line-height: 21pt !important;
+}
+
+.example {
+    background-color: #c4c4c4;
+}
+
+a {
+    text-decoration: none;
+    position: relative;
+    color: #2470B3;
+}
+
+a:after {
+    content: '';
+
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+
+    border-width: 0 0 1px;
+    border-style: solid;
+}

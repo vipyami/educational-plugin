@@ -3,8 +3,21 @@ background-color: #3c3f41;
 }
 
 body {
+    margin-left: 16px;
+    margin-right: 0;
+    font-family: ".SF NS Text", sans-serif;
     background-color: #3c3f41;
-    color: #bababa
+    color: #bababa;
+    font-size: 13px !important;
+    font-weight: normal;
+    line-height: 20px;
+}
+
+pre code {
+    font-family: "Menlo", monospace;
+    font-size: 12px !important;
+    line-height: 16px;
+    font-weight: normal;
 }
 
 p img {

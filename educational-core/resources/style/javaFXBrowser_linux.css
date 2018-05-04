@@ -1,0 +1,50 @@
+body {
+    margin-left: 16px;
+    margin-right: 0;
+    font-family: "Ubuntu", sans-serif;
+    color: #262626;
+    font-size: 14px !important;
+    font-weight: normal;
+    line-height: 24px;
+}
+
+pre code {
+    font-family: "Source Code Pro", monospace;
+    font-size: 13px !important;
+    line-height: 20px !important; /*does this work?*/
+    font-weight: normal;
+}
+
+.header {
+    font-size: 15pt;
+    font-weight: Bold;
+    line-height: 21pt !important;
+}
+
+.example {
+    background-color: #c4c4c4;
+}
+
+/*a {*/
+    /*text-decoration: none;*/
+    /*position: relative;*/
+    /*color: #2470B3;*/
+/*}*/
+
+a {
+    text-decoration: none;
+    position: relative;
+    color: #2470B3;
+}
+
+a:hover a:active {
+    content: '';
+
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+
+    border-width: 0 0 1px;
+    border-style: solid;
+}
