@@ -9,6 +9,8 @@ import com.intellij.openapi.fileEditor.impl.EditorHistoryManager
 import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.fileEditor.impl.FileEditorProviderManagerImpl
 import com.intellij.openapi.fileTypes.PlainTextLanguage
+import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.ui.TestDialog
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
@@ -141,5 +143,15 @@ abstract class EduTestCase : LightPlatformCodeInsightFixtureTestCase() {
     val taskDir = task.getTaskDir(project)!!
     val taskFile = task.getTaskFile(taskFilePath)!!
     return EduUtils.findTaskFileInDir(taskFile, taskDir)!!
+  }
+
+
+  protected inline fun withTestDialog(dialog: TestDialog, action: () -> Unit) {
+    val oldDialog = Messages.setTestDialog(dialog)
+    try {
+      action()
+    } finally {
+      Messages.setTestDialog(oldDialog)
+    }
   }
 }
