@@ -8,16 +8,26 @@ body {
     font-family: ".SF NS Text", sans-serif;
     background-color: #3c3f41;
     color: #bababa;
-    font-size: 13px !important;
+    font-size: 13px; /*resetting in BrowserWindow depending on editor font size*/
     font-weight: normal;
     line-height: 20px;
 }
 
 pre code {
     font-family: "Menlo", monospace;
-    font-size: 12px !important;
+    font-size: 12px; /*resetting in BrowserWindow depending on editor font size*/
     line-height: 16px;
     font-weight: normal;
+}
+
+code {
+    font-family: "Menlo", monospace;
+}
+
+.header {
+    font-size: 1.15em;
+    font-weight: Bold;
+    line-height: 21pt !important;
 }
 
 p img {

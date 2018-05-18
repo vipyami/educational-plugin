@@ -8,16 +8,26 @@ body {
     font-family: "Ubuntu", sans-serif;
     background-color: #3c3f41;
     color: #bababa;
-    font-size: 14px !important;
+    font-size: 14px; /*resetting in BrowserWindow depending on editor font size*/
     font-weight: normal;
     line-height: 24px;
 }
 
 pre code {
     font-family: "Source Code Pro", monospace;
-    font-size: 13px !important;
-    line-height: 20px !important; /*does this work?*/
+    font-size: 13px; /*resetting in BrowserWindow depending on editor font size*/
+    line-height: 20px; /*does this work?*/
     font-weight: normal;
+}
+
+code {
+    font-family: "Source Code Pro", monospace;
+}
+
+.header {
+    font-size: 1.15em;
+    font-weight: Bold;
+    line-height: 21pt !important;
 }
 
 p img {

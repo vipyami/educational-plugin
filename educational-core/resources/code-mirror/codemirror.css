@@ -11,7 +11,8 @@
 
 .CodeMirror {
     /* Set height, width, borders, and global font properties here */
-    font-family: monospace;
+    font-family: "Menlo", monospace !important;
+    font-size: 20px;
     height: 300px;
     color: #808080 !important;
 }

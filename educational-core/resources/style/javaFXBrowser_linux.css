@@ -3,20 +3,24 @@ body {
     margin-right: 0;
     font-family: "Ubuntu", sans-serif;
     color: #262626;
-    font-size: 14px !important;
+    font-size: 14px; /*resetting in BrowserWindow depending on editor font size*/
     font-weight: normal;
     line-height: 24px;
 }
 
 pre code {
     font-family: "Source Code Pro", monospace;
-    font-size: 13px !important;
-    line-height: 20px !important; /*does this work?*/
+    font-size: 13px; /*resetting in BrowserWindow depending on editor font size*/
+    line-height: 20px; /*does this work?*/
     font-weight: normal;
 }
 
+code {
+    font-family: "Source Code Pro", monospace;
+}
+
 .header {
-    font-size: 15pt;
+    font-size: 1.15em;
     font-weight: Bold;
     line-height: 21pt !important;
 }
