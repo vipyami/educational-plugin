@@ -19,6 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.intellij.ide.RecentProjectsManager;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.idea.ActionsBundle;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -145,8 +146,12 @@ public abstract class CourseProjectGenerator<S> {
     baseDir.putUserData(COURSE_MODE_TO_CREATE, myCourse.getCourseMode());
     Project project = PlatformProjectOpenProcessor.doOpenProject(baseDir, null, -1, callback, options);
     if (project != null) {
+      if (ApplicationManager.getApplication().isUnitTestMode()) {
+        myCourseBuilder.refreshProject(project);
+      }
       project.putUserData(EDU_PROJECT_CREATED, true);
     }
+
     return project;
   }
 
