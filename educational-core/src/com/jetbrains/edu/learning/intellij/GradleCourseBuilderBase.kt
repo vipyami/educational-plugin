@@ -42,10 +42,7 @@ abstract class GradleCourseBuilderBase : EduCourseBuilder<JdkProjectSettings>, E
     GradleCourseProjectGenerator(this, course)
 
   override fun onFailure(errorMessage: String, errorDetails: String?) {
-    LOG.error(errorMessage)
-    if (errorDetails != null) {
-      LOG.error(errorDetails)
-    }
+    throw IllegalStateException("$errorMessage\n$errorDetails")
   }
 
   companion object {
