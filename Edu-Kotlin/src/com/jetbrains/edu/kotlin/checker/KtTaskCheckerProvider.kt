@@ -6,6 +6,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.edu.learning.checker.gradle.GradleTaskCheckerProvider
 import org.jetbrains.kotlin.idea.run.KotlinRunConfigurationProducer
+import org.jetbrains.kotlin.psi.KtDeclarationContainer
 import org.jetbrains.kotlin.psi.KtElement
 
 class KtTaskCheckerProvider : GradleTaskCheckerProvider() {
@@ -15,6 +16,8 @@ class KtTaskCheckerProvider : GradleTaskCheckerProvider() {
     if (psiFile == null) {
       println("KtTaskCheckerProvider: can't find `$file`")
       return null
+    } else {
+      println("KtTaskCheckerProvider: psiFile: $psiFile")
     }
     val ktElements = PsiTreeUtil.findChildrenOfType(psiFile, KtElement::class.java)
     println("KtTaskCheckerProvider: ktElements: `$ktElements`")
@@ -22,6 +25,14 @@ class KtTaskCheckerProvider : GradleTaskCheckerProvider() {
     println("KtTaskCheckerProvider: container: `$container`")
     val startClassFqName = KotlinRunConfigurationProducer.getStartClassFqName(container)
     println("KtTaskCheckerProvider: startClassFqName: `$startClassFqName`")
+
+    if (startClassFqName == null) {
+      if (psiFile is KtDeclarationContainer) {
+        val startClassFqName2 = KotlinRunConfigurationProducer.getStartClassFqName(container)
+        println("KtTaskCheckerProvider: startClassFqName2: `$startClassFqName2`")
+        return startClassFqName2
+      }
+    }
     return startClassFqName
 
   }
