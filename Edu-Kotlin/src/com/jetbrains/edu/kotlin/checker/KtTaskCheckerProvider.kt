@@ -11,9 +11,18 @@ import org.jetbrains.kotlin.psi.KtElement
 class KtTaskCheckerProvider : GradleTaskCheckerProvider() {
 
   override fun mainClassForFile(project: Project, file: VirtualFile): String? {
-    val psiFile = PsiManager.getInstance(project).findFile(file) ?: return null
+    val psiFile = PsiManager.getInstance(project).findFile(file)
+    if (psiFile != null) {
+      println("KtTaskCheckerProvider: can't find `$file`")
+      return null
+    }
     val ktElements = PsiTreeUtil.findChildrenOfType(psiFile, KtElement::class.java)
+    println("KtTaskCheckerProvider: ktElements: `$ktElements`")
     val container = KotlinRunConfigurationProducer.getEntryPointContainer(ktElements.first())
-    return KotlinRunConfigurationProducer.getStartClassFqName(container)
+    println("KtTaskCheckerProvider: container: `$container`")
+    val startClassFqName = KotlinRunConfigurationProducer.getStartClassFqName(container)
+    println("KtTaskCheckerProvider: startClassFqName: `$startClassFqName`")
+    return startClassFqName
+
   }
 }
