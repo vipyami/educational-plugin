@@ -28,6 +28,11 @@ version = "$pluginVersion-${buildNumber == null ? "SNAPSHOT" : buildNumber}"
 
 import de.undercouch.gradle.tasks.download.Download
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.jetbrains.annotations.NotNull
+import org.jetbrains.intellij.Utils
+import org.jetbrains.intellij.jbre.JbreResolver
+import org.jetbrains.intellij.IntelliJPlugin
+import org.jetbrains.intellij.IntelliJPluginExtension
 
 String downloadStudioIfNeededAndGetPath() {
     if (!rootProject.hasProperty("studioVersion")) throw IllegalStateException("studioVersion is unspecified")
@@ -108,6 +113,14 @@ allprojects {
         }
     }
 
+    afterEvaluate {
+        configureProjectAfterEvaluate(project)
+    }
+
+//    test {
+//        executable = getJbreExecutable(project, executable)
+//    }
+
     compileKotlin {
         // see https://youtrack.jetbrains.com/issue/KT-19737
         destinationDir = compileJava.destinationDir
@@ -138,6 +151,45 @@ allprojects {
     }
 }
 
+void configureProjectAfterEvaluate(Project project) {
+    def extension = project.extensions.findByType(IntelliJPluginExtension.class)
+    if (extension == null) return
+    println("extension: $extension")
+
+    def ideaSdkDirectory = Utils.ideaSdkDirectory(extension)
+    println ideaSdkDirectory
+    def jbreVersion = Utils.getBuiltinJbreVersion(ideaSdkDirectory)
+    println("jbreVersion: ${jbreVersion}")
+    if (jbreVersion == null) return
+    def jbreResolver = new JbreResolver(project)
+    def jbre = jbreResolver.resolve(jbreVersion)
+    if (jbre == null) return
+    println("jbre executable: ${jbre.javaExecutable}")
+
+    project.tasks.withType(Test).each {
+//        it.executable = jbre.javaExecutable
+    }
+}
+
+//String getJbreExecutable(Project project, String defaultValue) {
+//    println("defaultValue: $defaultValue")
+//    def jbreResolver = new JbreResolver(project)
+//    def extension = project.extensions.findByType(IntelliJPluginExtension.class)
+//    if (extension == null) return defaultValue
+//    println("extension: $extension")
+//    def ideaSdkDirectory = Utils.ideaSdkDirectory(extension)
+//    println ideaSdkDirectory
+//    def jbreVersion = Utils.getBuiltinJbreVersion(ideaSdkDirectory)
+//    println("jbreVersion: ${jbreVersion}")
+//    if (jbreVersion != null) {
+//        def jbre = jbreResolver.resolve(jbreVersion)
+//        if (jbre != null) {
+//            println("jbre executable: ${jbre.javaExecutable}")
+//            return jbre.javaExecutable
+//        }
+//    }
+//    return defaultValue
+//}
 
 intellij {
     if (project.hasProperty("ideaVersion")) {
