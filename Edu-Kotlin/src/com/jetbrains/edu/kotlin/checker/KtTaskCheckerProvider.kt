@@ -12,7 +12,7 @@ class KtTaskCheckerProvider : GradleTaskCheckerProvider() {
 
   override fun mainClassForFile(project: Project, file: VirtualFile): String? {
     val psiFile = PsiManager.getInstance(project).findFile(file)
-    if (psiFile != null) {
+    if (psiFile == null) {
       println("KtTaskCheckerProvider: can't find `$file`")
       return null
     }
