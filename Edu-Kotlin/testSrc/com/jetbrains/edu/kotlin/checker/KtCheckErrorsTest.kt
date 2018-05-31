@@ -115,14 +115,14 @@ class KtCheckErrorsTest : KtCheckersTestBase() {
           }
         """)
       }
-      outputTask("outputTaskFail") {
-        kotlinTaskFile("Task.kt", """
-          fun main(args: Array<String>) {
-              println("OK")
-          }
-        """)
-        testFile("output.txt", "OK!")
-      }
+//      outputTask("outputTaskFail") {
+//        kotlinTaskFile("Task.kt", """
+//          fun main(args: Array<String>) {
+//              println("OK")
+//          }
+//        """)
+//        testFile("output.txt", "OK!")
+//      }
       outputTask("multilineOutputTaskFail") {
         kotlinTaskFile("Task.kt", """
           fun main(args: Array<String>) {
