@@ -14,7 +14,7 @@ public class CheckActionListener implements CheckListener {
         @Override
         public Unit invoke(@NotNull Task task, @NotNull CheckResult result) {
             String taskName = getTaskName(task);
-            Assert.assertFalse("Check Task Action skipped for " + taskName, result.getStatus() == CheckStatus.Unchecked);
+            Assert.assertFalse(String.format("Check Task Action skipped for `%s` with message :`%s`", taskName, result.getMessage()), result.getStatus() == CheckStatus.Unchecked);
             Assert.assertFalse("Check Task Action passed for " + taskName, result.getStatus() == CheckStatus.Solved);
             System.out.println("Checking status for " + taskName + " fails as expected");
             return Unit.INSTANCE;

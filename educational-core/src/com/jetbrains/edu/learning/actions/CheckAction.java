@@ -168,6 +168,7 @@ public class CheckAction extends DumbAwareActionWithShortcut {
       if (configurator != null) {
         TaskCheckerProvider checkerProvider = configurator.getTaskCheckerProvider();
         myChecker = checkerProvider.getTaskChecker(task, project);
+        System.out.println("CheckAction: checker class " + myChecker.getClass().getCanonicalName());
       }
       else {
         myChecker = null;

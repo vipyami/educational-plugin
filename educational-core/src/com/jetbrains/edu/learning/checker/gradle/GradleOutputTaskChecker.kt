@@ -16,6 +16,7 @@ class GradleOutputTaskChecker(
 ) : OutputTaskChecker(task, project) {
 
   override fun check(): CheckResult {
+    println("GradleOutputTaskChecker: start check for `${task.name}`")
     val result = runGradleRunTask(project, task, mainClassForFile)
     val output = when (result) {
       is Err -> return result.error
@@ -30,9 +31,11 @@ class GradleOutputTaskChecker(
 
     val expectedOutput = VfsUtil.loadText(outputFile).postProcessOutput()
     if (expectedOutput != output) {
+      println("GradleOutputTaskChecker: check for `${task.name}` failed")
       return CheckResult(CheckStatus.Failed, "Expected output:\n$expectedOutput\nActual output:\n$output")
     }
 
+    println("GradleOutputTaskChecker: check for `${task.name}` passed")
     return CheckResult(CheckStatus.Solved, TestsOutputParser.CONGRATULATIONS)
   }
 }
