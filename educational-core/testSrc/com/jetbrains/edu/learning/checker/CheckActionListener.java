@@ -44,6 +44,7 @@ public class CheckActionListener implements CheckListener {
     @Override
     public void afterCheck(@NotNull Project project, @NotNull Task task, @NotNull CheckResult result) {
         checkStatus.invoke(task, result);
+        System.out.println(String.format("CheckActionListener. Task: `%s`, output: `%s`", getTaskName(task), result.getMessage()));
         if (expectedMessageForTask != null) {
             String expectedMessage = expectedMessageForTask.invoke(task);
             if (expectedMessage != null) {
@@ -51,7 +52,8 @@ public class CheckActionListener implements CheckListener {
             } else {
                 throw new IllegalStateException(String.format("Unexpected task `%s`", task.getName()));
             }
-
+        } else {
+            System.out.println(String.format("`expectedMessageForTask` is null for `%s`", getTaskName(task)));
         }
     }
 
