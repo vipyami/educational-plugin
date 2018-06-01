@@ -6,6 +6,10 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.Result
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.impl.ComponentManagerImpl
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.ex.FileEditorProviderManager
 import com.intellij.openapi.fileEditor.impl.EditorHistoryManager
@@ -37,11 +41,12 @@ import com.jetbrains.edu.learning.actions.CheckAction
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
 import com.jetbrains.edu.learning.newproject.CourseProjectGenerator
+import org.jetbrains.plugins.gradle.util.GradleConstants
 import org.junit.Assert
 import org.junit.ComparisonFailure
 import java.io.File
 
-abstract class CheckersTestBase : UsefulTestCase() {
+abstract class CheckersTestBase : UsefulTestCase(), ExternalProjectRefreshCallback {
     private lateinit var myManager: FileEditorManagerImpl
     private lateinit var myOldManager: FileEditorManager
     private lateinit var myOldDockContainers: Set<DockContainer>
@@ -55,6 +60,15 @@ abstract class CheckersTestBase : UsefulTestCase() {
     private val MY_TEST_JDK_NAME = "Test JDK"
 
     fun doTest() {
+        UIUtil.dispatchAllInvocationEvents()
+
+        ExternalSystemUtil.refreshProjects(
+          ImportSpecBuilder(myProject, GradleConstants.SYSTEM_ID)
+            .forceWhenUptodate(true)
+            .use(ProgressExecutionMode.MODAL_SYNC)
+            .callback(this)
+        )
+
         UIUtil.dispatchAllInvocationEvents()
 
         val exceptions = arrayListOf<AssertionError>()
@@ -91,6 +105,10 @@ abstract class CheckersTestBase : UsefulTestCase() {
 
         override val message: String?
             get() = "\n" + causes.joinToString("\n") { it.message ?: "" }
+    }
+
+    override fun onFailure(errorMessage: String, errorDetails: String?) {
+        throw IllegalStateException("$errorMessage\n$errorDetails")
     }
 
     protected abstract fun getGenerator(course: Course): CourseProjectGenerator<JdkProjectSettings>
