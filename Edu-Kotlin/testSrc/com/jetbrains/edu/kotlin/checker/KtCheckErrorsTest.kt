@@ -5,6 +5,7 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil
 import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.edu.learning.checker.CheckActionListener
 import com.jetbrains.edu.learning.checker.CheckUtils
@@ -174,6 +175,10 @@ class KtCheckErrorsTest : KtCheckersTestBase() {
         else -> null
       }?.trimIndent()
     }
+
+    println("jdk path: ${System.getProperty("java.home")}")
+    println("jdk vendor: ${System.getProperty("java.vendor")}")
+    println("jvm vendor: ${SystemInfo.JAVA_VENDOR}")
     doTest()
   }
 
