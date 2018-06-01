@@ -7,6 +7,7 @@ import com.intellij.openapi.application.Result
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.impl.ComponentManagerImpl
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutionSettings
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -157,6 +158,8 @@ abstract class CheckersTestBase : UsefulTestCase(), ExternalProjectRefreshCallba
 
         val myJdkHome = IdeaTestUtil.requireRealJdkHome()
         VfsRootAccess.allowRootAccess(testRootDisposable, myJdkHome)
+
+        System.setProperty(ExternalSystemExecutionSettings.REMOTE_PROCESS_IDLE_TTL_IN_MS_KEY, 10000.toString())
 
         myApplication = IdeaTestApplication.getInstance()
 
