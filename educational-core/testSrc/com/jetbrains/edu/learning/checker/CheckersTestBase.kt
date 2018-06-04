@@ -63,14 +63,14 @@ abstract class CheckersTestBase : UsefulTestCase(), ExternalProjectRefreshCallba
     fun doTest() {
         UIUtil.dispatchAllInvocationEvents()
 
-        ExternalSystemUtil.refreshProjects(
-          ImportSpecBuilder(myProject, GradleConstants.SYSTEM_ID)
-            .forceWhenUptodate(true)
-            .use(ProgressExecutionMode.MODAL_SYNC)
-            .callback(this)
-        )
-
-        UIUtil.dispatchAllInvocationEvents()
+//        ExternalSystemUtil.refreshProjects(
+//          ImportSpecBuilder(myProject, GradleConstants.SYSTEM_ID)
+//            .forceWhenUptodate(true)
+//            .use(ProgressExecutionMode.MODAL_SYNC)
+//            .callback(this)
+//        )
+//
+//        UIUtil.dispatchAllInvocationEvents()
 
         val exceptions = arrayListOf<AssertionError>()
         for (lesson in myCourse.lessons) {
