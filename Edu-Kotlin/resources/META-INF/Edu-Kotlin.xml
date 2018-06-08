@@ -7,6 +7,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceInterface="com.jetbrains.edu.kotlin.twitter.KtTwitterSettings"
                         serviceImplementation="com.jetbrains.edu.kotlin.twitter.KtTwitterSettings"/>
+        <projectService serviceInterface="com.intellij.build.SyncViewManager" serviceImplementation="com.jetbrains.edu.kotlin.TempSyncViewManager"
+        overrides="true"/>
     </extensions>
 
     <extensions defaultExtensionNs="Educational">
