@@ -90,6 +90,9 @@ configure(subprojects.findAll {it.name != 'util'}) {
   }
 }
 
+import org.gradle.api.tasks.wrapper.Wrapper.DistributionType
+
 task wrapper(type: Wrapper) {
   gradleVersion = '$GRADLE_VERSION$'
+  distributionType = DistributionType.ALL
 }
