@@ -58,7 +58,7 @@ abstract class CheckersTestBase : UsefulTestCase() {
     override fun shouldRunTest(): Boolean {
         // We temporarily disable checkers tests on teamcity linux agents
         // because they don't work on these agents and we can't find out a reason :((
-        return super.shouldRunTest() && (!SystemInfo.isLinux || System.getenv("TEAMCITY_VERSION") == null)
+        return super.shouldRunTest() && (!SystemInfo.isLinux || System.getenv("TEAMCITY_VERSION") == null || System.getenv("ENABLE_CHECKERS_TESTS") != null)
     }
 
     fun doTest() {
