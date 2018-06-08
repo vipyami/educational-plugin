@@ -181,10 +181,10 @@ fun findMainClass(project: Project, task: Task, mainClassForFile: (Project, Virt
 
     val taskDir = task.getTaskDir(project) ?: return@runReadAction null
 
-    for ((_, taskFile) in task.taskFiles) {
-      val file = taskFile.getVirtualFile(project) ?: continue
+    for ((name, taskFile) in task.taskFiles) {
+//      val file = taskFile.getVirtualFile(project) ?: continue
 //      task.findSourceDir(taskDir)?.findFileByRelativePath()
-//      val file = taskDir.findChild(name) ?: continue
+      val file = taskDir.findChild(name) ?: continue
       return@runReadAction mainClassForFile(project, file) ?: continue
     }
     null
