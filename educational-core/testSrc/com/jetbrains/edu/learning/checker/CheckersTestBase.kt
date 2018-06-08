@@ -47,7 +47,7 @@ abstract class CheckersTestBase : UsefulTestCase() {
     private lateinit var myOldManager: FileEditorManager
     private lateinit var myOldDockContainers: Set<DockContainer>
 
-    private lateinit var myCourse: Course
+    protected lateinit var myCourse: Course
     protected lateinit var myProject: Project
     private lateinit var myApplication: IdeaTestApplication
 
@@ -55,11 +55,11 @@ abstract class CheckersTestBase : UsefulTestCase() {
 
     private val MY_TEST_JDK_NAME = "Test JDK"
 
-    override fun shouldRunTest(): Boolean {
-        // We temporarily disable checkers tests on teamcity linux agents
-        // because they don't work on these agents and we can't find out a reason :((
-        return super.shouldRunTest() && (!SystemInfo.isLinux || System.getenv("TEAMCITY_VERSION") == null)
-    }
+//    override fun shouldRunTest(): Boolean {
+//        // We temporarily disable checkers tests on teamcity linux agents
+//        // because they don't work on these agents and we can't find out a reason :((
+//        return super.shouldRunTest() && (!SystemInfo.isLinux || System.getenv("TEAMCITY_VERSION") == null)
+//    }
 
     fun doTest() {
         UIUtil.dispatchAllInvocationEvents()

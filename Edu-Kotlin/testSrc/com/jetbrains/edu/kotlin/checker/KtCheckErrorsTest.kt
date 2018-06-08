@@ -1,6 +1,10 @@
 package com.jetbrains.edu.kotlin.checker
 
+import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil
@@ -8,9 +12,14 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.util.ui.UIUtil
 import com.jetbrains.edu.learning.checker.CheckActionListener
 import com.jetbrains.edu.learning.checker.CheckUtils
+import com.jetbrains.edu.learning.checker.gradle.MAIN_CLASS_PROPERTY_PREFIX
+import com.jetbrains.edu.learning.checker.gradle.findMainClass
+import com.jetbrains.edu.learning.checker.gradle.generateGradleCommandLine
+import com.jetbrains.edu.learning.checker.gradle.getGradleProjectName
 import com.jetbrains.edu.learning.course
 import com.jetbrains.edu.learning.courseFormat.Course
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.plugins.gradle.util.GradleConstants
 
 class KtCheckErrorsTest : KtCheckersTestBase() {
 
@@ -207,6 +216,37 @@ class KtCheckErrorsTest : KtCheckersTestBase() {
         else -> null
       }?.trimIndent()
     }
+
+    UIUtil.dispatchAllInvocationEvents()
+
+//    val builder = ImportSpecBuilder(myProject, GradleConstants.SYSTEM_ID)
+//      .forceWhenUptodate()
+//      .use(ProgressExecutionMode.MODAL_SYNC)
+//      .
+//
+//    ExternalSystemUtil.refreshProjects(builder)
+
+    val task = myCourse.lessons[0].getTask("outputTaskFail")!!
+    val checkerProvider = KtTaskCheckerProvider()
+    val mainClassName = findMainClass(myProject, task, checkerProvider::mainClassForFile)
+    val cmd = generateGradleCommandLine(myProject, "${getGradleProjectName(task)}:run",
+                                        "$MAIN_CLASS_PROPERTY_PREFIX$mainClassName", "--stacktrace")!!
+    val handler = CapturingProcessHandler(cmd.createProcess(), null, cmd.commandLineString)
+    val processOutput =  handler.runProcess()
+    val message = """
+-----------------------------
+command line:
+${cmd.commandLineString}
+-----------------------------
+stdout:
+${processOutput.stdout}
+-----------------------------
+stderr:
+${processOutput.stderr}
+-----------------------------
+"""
+    fail(message)
+
     doTest()
   }
 

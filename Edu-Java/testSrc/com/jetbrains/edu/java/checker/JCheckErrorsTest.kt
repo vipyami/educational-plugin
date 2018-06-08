@@ -1,8 +1,10 @@
 package com.jetbrains.edu.java.checker
 
+import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.lang.java.JavaLanguage
 import com.jetbrains.edu.learning.checker.CheckActionListener
 import com.jetbrains.edu.learning.checker.CheckUtils
+import com.jetbrains.edu.learning.checker.gradle.generateGradleCommandLine
 import com.jetbrains.edu.learning.course
 import com.jetbrains.edu.learning.courseFormat.Course
 
