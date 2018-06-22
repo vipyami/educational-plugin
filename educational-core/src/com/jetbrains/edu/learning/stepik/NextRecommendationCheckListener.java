@@ -6,9 +6,9 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.edu.learning.checker.CheckListener;
 import com.jetbrains.edu.learning.checker.CheckResult;
+import com.jetbrains.edu.learning.courseFormat.CheckStatus;
 import com.jetbrains.edu.learning.courseFormat.Course;
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse;
-import com.jetbrains.edu.learning.courseFormat.CheckStatus;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +27,7 @@ public class NextRecommendationCheckListener implements CheckListener {
     if (!(course instanceof RemoteCourse && course.isAdaptive())) {
       return;
     }
+    // TODO: get hyperskill recommendations
     if (myStatusBeforeCheck == CheckStatus.Solved) {
       return;
     }

@@ -2,6 +2,7 @@ package com.jetbrains.edu.learning.stepik;
 
 import com.google.gson.annotations.SerializedName;
 import com.intellij.openapi.util.text.StringUtil;
+import com.jetbrains.edu.learning.stepik.alt.TokenInfo;
 import org.jetbrains.annotations.NotNull;
 
 public class StepicUser {
@@ -10,13 +11,26 @@ public class StepicUser {
   @SerializedName("last_name") private String myLastName;
   private String myAccessToken;
   private String myRefreshToken;
+  private long myExpiresIn;
   private boolean isGuest;
+
+  private String myHyperskillAccessToken;
+  private String myHyperskillRefreshToken;
 
   private StepicUser() {
     myFirstName = "";
     myLastName = "";
     myAccessToken = "";
     myRefreshToken = "";
+    myExpiresIn = -1;
+  }
+
+  public long getExpiresIn() {
+    return myExpiresIn;
+  }
+
+  public void setExpiresIn(long expiresIn) {
+    myExpiresIn = expiresIn;
   }
 
   public static StepicUser createEmptyUser() {
@@ -85,6 +99,12 @@ public class StepicUser {
   public void setTokenInfo(@NotNull final StepikWrappers.TokenInfo tokenInfo) {
     myAccessToken = tokenInfo.getAccessToken();
     myRefreshToken = tokenInfo.getRefreshToken();
+    myExpiresIn = tokenInfo.getExpiresIn();
+  }
+
+  public void setHyperskillTokenInfo(@NotNull final TokenInfo tokenInfo) {
+    myHyperskillAccessToken = tokenInfo.getAccessToken();
+    myHyperskillRefreshToken = tokenInfo.getRefreshToken();
   }
 
   public boolean isGuest() {
