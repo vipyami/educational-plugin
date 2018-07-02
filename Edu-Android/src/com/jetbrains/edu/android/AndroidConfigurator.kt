@@ -1,0 +1,21 @@
+package com.jetbrains.edu.android
+
+import com.jetbrains.edu.learning.EduCourseBuilder
+import com.jetbrains.edu.learning.checker.TaskCheckerProvider
+import com.jetbrains.edu.learning.intellij.GradleConfiguratorBase
+import com.jetbrains.edu.learning.intellij.JdkProjectSettings
+
+class AndroidConfigurator : GradleConfiguratorBase() {
+
+  private val courseBuilder: AndroidCourseBuilder = AndroidCourseBuilder()
+
+  override fun getCourseBuilder(): EduCourseBuilder<JdkProjectSettings> = courseBuilder
+
+  override fun getTestFileName(): String {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+
+  override fun getTaskCheckerProvider(): TaskCheckerProvider {
+    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+  }
+}
