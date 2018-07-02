@@ -167,12 +167,14 @@ public abstract class CourseProjectGenerator<S> {
     GeneratorUtils.initializeCourse(project, myCourse);
 
     if (CCUtils.isCourseCreator(project) && myCourse.getItems().isEmpty()) {
-      final Lesson lesson = new CCCreateLesson().createAndInitItem(project, myCourse, null, EduNames.LESSON + 1, 1);
-      myCourse.addLesson(lesson);
-      final Task task = new CCCreateTask().createAndInitItem(project, myCourse, lesson, EduNames.TASK + 1, 1);
-      assert task != null;
-      lesson.addTask(task);
-      myCourseBuilder.initNewTask(task);
+      final Lesson lesson = myCourseBuilder.createInitialLesson(project, myCourse);
+      if (lesson != null) {
+        myCourse.addLesson(lesson);
+        final Task task = myCourseBuilder.createInitialTask(project, myCourse, lesson);
+        if (task != null) {
+          lesson.addTask(task);
+        }
+      }
     }
 
     try {
