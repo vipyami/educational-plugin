@@ -60,8 +60,12 @@ open class CCCreateTask : CCCreateStudyItemActionBase<Task>(EduNames.TASK, Educa
     newTask.lesson = parentItem
     newTask.addDefaultTaskDescription()
     if (parentItem is FrameworkLesson) {
-      val prevTask = parentItem.getTaskList().getOrNull(index - 2) ?: return newTask
-      val prevTaskDir = prevTask.getTaskDir(project) ?: return newTask
+      val prevTask = parentItem.getTaskList().getOrNull(index - 2)
+      val prevTaskDir = prevTask?.getTaskDir(project)
+      if (prevTask == null || prevTaskDir == null) {
+        initTask(course, parentItem, newTask)
+        return newTask
+      }
       FileDocumentManager.getInstance().saveAllDocuments()
       newTask.taskFiles = prevTask.taskFiles.mapValues { (_, taskFile) -> taskFile.copyForNewTask(prevTaskDir, newTask) }
       newTask.additionalFiles = HashMap(prevTask.additionalFiles)
@@ -77,8 +81,16 @@ open class CCCreateTask : CCCreateStudyItemActionBase<Task>(EduNames.TASK, Educa
             placeholder.placeholderDependency = dependency.copy(taskName = newTask.name)
           }
         }
+    } else {
+      initTask(course, parentItem, newTask)
     }
     return newTask
+  }
+
+  private fun initTask(course: Course, lesson: Lesson, task: Task) {
+    if (!course.isStudy) {
+      course.configurator?.courseBuilder?.initNewTask(lesson, task)
+    }
   }
 
   private fun TaskFile.copyForNewTask(taskDir: VirtualFile, newTask: Task): TaskFile {

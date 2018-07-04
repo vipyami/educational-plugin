@@ -63,9 +63,6 @@ public interface EduCourseBuilder<Settings> {
                                         @NotNull final Task task,
                                         @NotNull final VirtualFile parentDirectory,
                                         @NotNull final Course course) {
-    if (!course.isStudy()) {
-      initNewTask(task);
-    }
     try {
       GeneratorUtils.createTask(task, parentDirectory);
     } catch (IOException e) {
@@ -88,11 +85,7 @@ public interface EduCourseBuilder<Settings> {
 
   @Nullable
   default Task createInitialTask(@NotNull Project project, @NotNull Course course, @NotNull Lesson lesson) {
-    Task task = new CCCreateTask().createAndInitItem(project, course, lesson, EduNames.TASK + 1, 1);
-    if (task != null) {
-      initNewTask(task);
-    }
-    return task;
+    return new CCCreateTask().createAndInitItem(project, course, lesson, EduNames.TASK + 1, 1);
   }
 
   /**
@@ -101,7 +94,7 @@ public interface EduCourseBuilder<Settings> {
    *
    * @param task initializing task
    */
-  default void initNewTask(@NotNull final Task task) {
+  default void initNewTask(@NotNull final Lesson lesson, @NotNull final Task task) {
     if (task.taskFiles.isEmpty()) {
       TaskFile taskFile = new TaskFile();
       String taskTemplateName = getTaskTemplateName();
