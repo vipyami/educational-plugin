@@ -153,6 +153,7 @@ public abstract class Task extends StudyItem {
   }
 
   public void addTaskFile(@NotNull final TaskFile taskFile) {
+    taskFile.setTask(this);
     taskFiles.put(taskFile.name, taskFile);
   }
 
