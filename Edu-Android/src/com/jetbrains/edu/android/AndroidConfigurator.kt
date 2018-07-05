@@ -8,6 +8,7 @@ import com.jetbrains.edu.learning.intellij.JdkProjectSettings
 class AndroidConfigurator : GradleConfiguratorBase() {
 
   private val courseBuilder: AndroidCourseBuilder = AndroidCourseBuilder()
+  private val taskCheckerProvider: AndroidTaskCheckerProvider = AndroidTaskCheckerProvider()
 
   override fun getCourseBuilder(): EduCourseBuilder<JdkProjectSettings> = courseBuilder
 
@@ -18,7 +19,5 @@ class AndroidConfigurator : GradleConfiguratorBase() {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun getTaskCheckerProvider(): TaskCheckerProvider {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
+  override fun getTaskCheckerProvider(): TaskCheckerProvider = taskCheckerProvider
 }
