@@ -69,7 +69,9 @@ public interface EduCourseBuilder<Settings> {
       LOG.error("Failed to create task", e);
     }
     final VirtualFile taskDir = parentDirectory.findChild(task.getName());
-    refreshProject(project);
+    if (!ApplicationManager.getApplication().isUnitTestMode()) {
+      refreshProject(project);
+    }
     return taskDir;
   }
 
