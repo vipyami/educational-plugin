@@ -72,8 +72,8 @@ public class CCProjectComponent extends AbstractProjectComponent {
   private void convertToGradleProject(@NotNull Course course,
                                       @NotNull Map<String, String> configTemplates,
                                       @NotNull Map<String, String> configVariables) {
-    String basePath = myProject.getBasePath();
-    if (basePath == null) {
+    VirtualFile baseDir = myProject.getBaseDir();
+    if (baseDir == null) {
       return;
     }
 
@@ -89,7 +89,7 @@ public class CCProjectComponent extends AbstractProjectComponent {
       modifiableModuleModel.commit();
 
       try {
-        EduGradleUtils.createProjectGradleFiles(basePath, configTemplates, configVariables);
+        EduGradleUtils.createProjectGradleFiles(baseDir, configTemplates, configVariables);
 
         StartupManager.getInstance(myProject).runWhenProjectIsInitialized(() -> transformCourseStructure(course, myProject));
 
@@ -98,8 +98,8 @@ public class CCProjectComponent extends AbstractProjectComponent {
       }
     });
 
-    EduGradleUtils.setGradleSettings(myProject, basePath);
-    EduGradleUtils.importGradleProject(myProject, basePath);
+    EduGradleUtils.setGradleSettings(myProject, baseDir.getPath());
+    EduGradleUtils.importGradleProject(myProject, baseDir.getPath());
   }
 
   private static void transformFiles(Course course, Project project) {
