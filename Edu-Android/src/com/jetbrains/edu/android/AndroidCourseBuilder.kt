@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.jetbrains.edu.android.AndroidCourseBuilder.Type.*
+import com.jetbrains.edu.learning.LanguageSettings
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.FrameworkLesson
 import com.jetbrains.edu.learning.courseFormat.Lesson
@@ -14,6 +15,7 @@ import com.jetbrains.edu.learning.courseFormat.TaskFile
 import com.jetbrains.edu.learning.courseFormat.ext.isFrameworkTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.intellij.GradleCourseBuilderBase
+import com.jetbrains.edu.learning.intellij.JdkProjectSettings
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
 class AndroidCourseBuilder : GradleCourseBuilderBase() {
@@ -60,6 +62,8 @@ class AndroidCourseBuilder : GradleCourseBuilderBase() {
       }
     }
   }
+
+  override fun getLanguageSettings(): LanguageSettings<JdkProjectSettings> = AndroidLanguageSettings()
 
   companion object {
 
