@@ -1,6 +1,8 @@
 package com.jetbrains.edu.android
 
+import com.intellij.openapi.application.Experiments
 import com.jetbrains.edu.learning.EduCourseBuilder
+import com.jetbrains.edu.learning.EduExperimentalFeatures
 import com.jetbrains.edu.learning.checker.TaskCheckerProvider
 import com.jetbrains.edu.learning.intellij.GradleConfiguratorBase
 import com.jetbrains.edu.learning.intellij.JdkProjectSettings
@@ -19,4 +21,6 @@ class AndroidConfigurator : GradleConfiguratorBase() {
   override fun getTestFileName(): String = "ExampleUnitTest.kt"
 
   override fun getTaskCheckerProvider(): TaskCheckerProvider = taskCheckerProvider
+
+  override fun isEnabled(): Boolean = Experiments.isFeatureEnabled(EduExperimentalFeatures.ANDROID_COURSES)
 }
