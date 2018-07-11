@@ -297,9 +297,17 @@ public class EduUtils {
       return Collections.emptyList();
     }
 
-    return Arrays.stream(testDir.getChildren())
-      .filter(file -> configurator.isTestFile(project, file))
-      .collect(Collectors.toList());
+    ArrayList<VirtualFile> testFiles = new ArrayList<>();
+    VfsUtilCore.visitChildrenRecursively(testDir, new VirtualFileVisitor(VirtualFileVisitor.NO_FOLLOW_SYMLINKS) {
+      @Override
+      public boolean visitFile(@NotNull VirtualFile file) {
+        if (!file.isDirectory() && configurator.isTestFile(project, file)) {
+          testFiles.add(file);
+        }
+        return true;
+      }
+    });
+    return testFiles;
   }
 
   @Nullable
