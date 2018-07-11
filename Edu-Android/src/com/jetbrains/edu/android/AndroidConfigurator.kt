@@ -15,9 +15,8 @@ class AndroidConfigurator : GradleConfiguratorBase() {
   override fun getSourceDir(): String = "src/main"
   override fun getTestDir(): String = "src/test"
 
-  override fun getTestFileName(): String {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
+  // TODO: do something with this method
+  override fun getTestFileName(): String = "ExampleUnitTest.kt"
 
   override fun getTaskCheckerProvider(): TaskCheckerProvider = taskCheckerProvider
 }
