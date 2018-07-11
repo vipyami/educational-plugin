@@ -1,5 +1,6 @@
 package com.jetbrains.edu.python.learning;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.PlatformUtils;
@@ -44,7 +45,7 @@ public class PyConfigurator implements EduConfigurator<PyNewProjectSettings> {
   }
 
   @Override
-  public boolean isTestFile(VirtualFile file) {
+  public boolean isTestFile(@NotNull Project project, @NotNull VirtualFile file) {
     return TESTS_PY.equals(file.getName());
   }
 

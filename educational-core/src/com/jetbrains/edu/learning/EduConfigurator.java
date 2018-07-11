@@ -3,6 +3,7 @@ package com.jetbrains.edu.learning;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.edu.learning.actions.*;
 import com.jetbrains.edu.learning.checker.TaskCheckerProvider;
@@ -46,7 +47,7 @@ public interface EduConfigurator<Settings> {
   /**
    * @return true for all the test files
    */
-  default boolean isTestFile(VirtualFile file) {
+  default boolean isTestFile(@NotNull Project project, @NotNull VirtualFile file) {
     return false;
   }
 
