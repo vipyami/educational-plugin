@@ -29,7 +29,7 @@ class AndroidCourseBuilder : GradleCourseBuilderBase() {
     // TODO: extract suitable android gradle plugin version from android plugin
     // TODO: use com.jetbrains.edu.kotlin.KtCourseBuilder.Companion#getKotlinPluginVersion
     return super.getConfigVariables(project) + mapOf("ANDROID_GRADLE_PLUGIN_VERSION" to "3.1.3",
-                                                     "KOTLIN_VERSION" to "1.2.50",
+                                                     "KOTLIN_VERSION" to "1.2.30",
                                                      "SDK_PATH" to (IdeSdks.getInstance().androidSdkPath?.absolutePath ?: ""))
   }
 
