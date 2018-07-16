@@ -251,6 +251,11 @@ public class StepikTaskBuilder {
     StepikWrappers.StepOptions stepOptions = myStep.options;
     task.setName(stepOptions != null ? stepOptions.title : (PYCHARM_PREFIX + EduVersions.JSON_FORMAT_VERSION));
 
+    if (stepOptions == null) {
+      LOG.warn("Step options is null for pycharm task: " + myStep.name);
+      return task;
+    }
+
     for (StepikWrappers.FileWrapper wrapper : stepOptions.test) {
       task.addTestsTexts(wrapper.name, wrapper.text);
     }
