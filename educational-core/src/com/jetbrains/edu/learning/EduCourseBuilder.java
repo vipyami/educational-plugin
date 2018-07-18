@@ -57,8 +57,7 @@ public interface EduCourseBuilder<Settings> {
   @Nullable
   default VirtualFile createTaskContent(@NotNull final Project project,
                                         @NotNull final Task task,
-                                        @NotNull final VirtualFile parentDirectory,
-                                        @NotNull final Course course) {
+                                        @NotNull final VirtualFile parentDirectory) {
     try {
       GeneratorUtils.createTask(task, parentDirectory);
     } catch (IOException e) {
