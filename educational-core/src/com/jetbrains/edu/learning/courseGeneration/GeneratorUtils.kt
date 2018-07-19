@@ -18,7 +18,10 @@ import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.*
 import com.jetbrains.edu.learning.courseFormat.DescriptionFormat.HTML
 import com.jetbrains.edu.learning.courseFormat.DescriptionFormat.MD
-import com.jetbrains.edu.learning.courseFormat.ext.*
+import com.jetbrains.edu.learning.courseFormat.ext.course
+import com.jetbrains.edu.learning.courseFormat.ext.dirName
+import com.jetbrains.edu.learning.courseFormat.ext.isFrameworkTask
+import com.jetbrains.edu.learning.courseFormat.ext.testTextMap
 import com.jetbrains.edu.learning.courseFormat.tasks.CodeTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.intellij.EduIntellijUtils
@@ -144,15 +147,24 @@ object GeneratorUtils {
 
   @Throws(IOException::class)
   private fun createAdditionalFiles(lesson: Lesson, courseDir: VirtualFile) {
-    val taskList = lesson.getTaskList()
-    if (taskList.size != 1) return
-    val task = taskList[0]
+    val task = getAdditionalTask(lesson) ?: return
+    val filesToCreate = additionalFilesToCreate(task)
 
+    createFiles(courseDir, filesToCreate)
+  }
+
+  fun additionalFilesToCreate(task: Task): HashMap<String, String> {
     val filesToCreate = HashMap(task.testsText)
     task.getTaskFiles().mapValuesTo(filesToCreate) { entry -> entry.value.text }
     filesToCreate.putAll(task.additionalFiles)
+    return filesToCreate
+  }
 
-    createFiles(courseDir, filesToCreate)
+  fun getAdditionalTask(lesson: Lesson): Task? {
+    val taskList = lesson.getTaskList()
+    if (taskList.size != 1) return null
+
+    return taskList[0]
   }
 
   @Throws(IOException::class)

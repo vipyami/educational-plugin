@@ -11,6 +11,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.coursecreator.CCUtils
+import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.EduUtils.synchronize
 import com.jetbrains.edu.learning.courseFormat.*
@@ -81,7 +82,27 @@ class StepikCourseUpdater(val course: RemoteCourse, val project: Project) {
     course.items = Lists.newArrayList(courseFromServer.items)
     setCourseInfo(courseFromServer)
 
+    updateAdditionalMaterialsFiles(courseFromServer)
+
     return Pair(lessonsUpdated, newLessons.size)
+  }
+
+  private fun updateAdditionalMaterialsFiles(courseFromServer: Course) {
+    for (lesson in courseFromServer.items.filter { it is Lesson }) {
+      if (lesson.name == EduNames.ADDITIONAL_MATERIALS) {
+        val task = GeneratorUtils.getAdditionalTask(lesson as Lesson) ?: return
+
+        val filesToCreate = GeneratorUtils.additionalFilesToCreate(task)
+        runInEdt {
+          runWriteAction {
+            val baseDir = project.baseDir
+            for ((name, value) in filesToCreate) {
+              GeneratorUtils.createChildFile(baseDir, name, value)
+            }
+          }
+        }
+      }
+    }
   }
 
   private fun setCourseInfo(courseFromServer: Course) {
