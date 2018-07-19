@@ -30,7 +30,7 @@ open class CCCreateTask : CCCreateStudyItemActionBase<Task>(EduNames.TASK, Educa
   override fun createItemDir(project: Project, item: Task,
                              parentDirectory: VirtualFile, course: Course): VirtualFile? {
     val configurator = EduConfiguratorManager.forLanguage(course.languageById!!)
-    return configurator?.courseBuilder?.createTaskContent(project, item, parentDirectory, course)
+    return configurator?.courseBuilder?.createTaskContent(project, item, parentDirectory)
   }
 
   override fun getSiblingsSize(course: Course, parentItem: StudyItem?): Int =
