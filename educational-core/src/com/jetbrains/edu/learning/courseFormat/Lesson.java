@@ -25,6 +25,7 @@ public class Lesson extends StudyItem {
   @Expose @SerializedName("id") private int myId;
   @Transient public List<Integer> steps;
   @Transient public List<String> tags;
+
   @Transient boolean is_public;
   @Expose @SerializedName("update_date") private Date myUpdateDate = new Date(0);
 
@@ -139,6 +140,10 @@ public class Lesson extends StudyItem {
 
   public void setUpdateDate(Date updateDate) {
     myUpdateDate = updateDate;
+  }
+
+  public boolean isPublic() {
+    return is_public;
   }
 
   public void setPublic(boolean isPublic) {
