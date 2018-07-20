@@ -11,7 +11,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.edu.coursecreator.CCUtils
-import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.EduUtils.synchronize
 import com.jetbrains.edu.learning.courseFormat.*
@@ -64,7 +63,7 @@ class StepikCourseUpdater(val course: RemoteCourse, val project: Project) {
     }
 
     val sectionIds = course.sections.map { it.id }
-    val newSections = courseFromServer.sections.filter { section -> section.id !in sectionIds}
+    val newSections = courseFromServer.sections.filter { section -> section.id !in sectionIds }
     if (!newSections.isEmpty()) {
       createNewSections(project, newSections)
     }
@@ -88,18 +87,14 @@ class StepikCourseUpdater(val course: RemoteCourse, val project: Project) {
   }
 
   private fun updateAdditionalMaterialsFiles(courseFromServer: Course) {
-    for (lesson in courseFromServer.items.filter { it is Lesson }) {
-      if (lesson.name == EduNames.ADDITIONAL_MATERIALS) {
-        val task = GeneratorUtils.getAdditionalTask(lesson as Lesson) ?: return
+    for (lesson in courseFromServer.items.filterIsInstance(Lesson::class.java)) {
+      if (lesson.isAdditional) {
+        val task = lesson.taskList.singleOrNull() ?: return
 
-        val filesToCreate = GeneratorUtils.additionalFilesToCreate(task)
-        runInEdt {
-          runWriteAction {
-            val baseDir = project.baseDir
-            for ((name, value) in filesToCreate) {
-              GeneratorUtils.createChildFile(baseDir, name, value)
-            }
-          }
+        val filesToCreate = GeneratorUtils.additionalFilesToCreate(lesson)
+        val baseDir = project.baseDir
+        for ((name, value) in filesToCreate) {
+          GeneratorUtils.createChildFile(baseDir, name, value)
         }
       }
     }
@@ -161,7 +156,7 @@ class StepikCourseUpdater(val course: RemoteCourse, val project: Project) {
 
   @Throws(URISyntaxException::class, IOException::class)
   private fun updateSections(sectionsFromServer: List<Section>) {
-    val sectionsById = course.sections.associateBy{ it.id }
+    val sectionsById = course.sections.associateBy { it.id }
     for (sectionFromServer in sectionsFromServer) {
       sectionFromServer.lessons.withIndex().forEach { (index, lesson) -> lesson.index = index + 1 }
 

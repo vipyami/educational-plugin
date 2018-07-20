@@ -77,7 +77,7 @@ object GeneratorUtils {
   @Throws(IOException::class)
   @JvmStatic
   fun createLesson(lesson: Lesson, courseDir: VirtualFile) {
-    if (EduNames.ADDITIONAL_MATERIALS == lesson.name) {
+    if (lesson.isAdditional) {
       createAdditionalFiles(lesson, courseDir)
     } else {
       val lessonDir = createUniqueDir(courseDir, lesson)
@@ -147,24 +147,21 @@ object GeneratorUtils {
 
   @Throws(IOException::class)
   private fun createAdditionalFiles(lesson: Lesson, courseDir: VirtualFile) {
-    val task = getAdditionalTask(lesson) ?: return
-    val filesToCreate = additionalFilesToCreate(task)
+    val filesToCreate = additionalFilesToCreate(lesson)
 
     createFiles(courseDir, filesToCreate)
   }
 
-  fun additionalFilesToCreate(task: Task): HashMap<String, String> {
+  fun additionalFilesToCreate(lesson: Lesson): Map<String, String> {
+    if (!lesson.isAdditional) {
+      return emptyMap()
+    }
+
+    val task = lesson.taskList.singleOrNull() ?: return emptyMap()
     val filesToCreate = HashMap(task.testsText)
     task.getTaskFiles().mapValuesTo(filesToCreate) { entry -> entry.value.text }
     filesToCreate.putAll(task.additionalFiles)
     return filesToCreate
-  }
-
-  fun getAdditionalTask(lesson: Lesson): Task? {
-    val taskList = lesson.getTaskList()
-    if (taskList.size != 1) return null
-
-    return taskList[0]
   }
 
   @Throws(IOException::class)
