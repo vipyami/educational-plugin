@@ -35,32 +35,52 @@ public class CCShowChangedFiles extends DumbAwareAction {
   public static StringBuilder buildChangeMessage(Course course) {
     StringBuilder message = new StringBuilder();
     if (course.getStepikChangeStatus() != StepikChangeStatus.UP_TO_DATE) {
-      appendChangeLine("", course, message);
+      appendChangeLine("", course, message, course.getStepikChangeStatus().toString());
     }
 
     for (StudyItem item : course.getItems()) {
       if (item.getStepikChangeStatus() != StepikChangeStatus.UP_TO_DATE) {
-        appendChangeLine("", item, message);
+        appendChangeLine("", item, message, item.getStepikChangeStatus().toString());
+      }
+
+      // we don't mark new items, so to them we have to check it's id
+      if (isNew(item)) {
+        appendChangeLine("", item, message, "new");
       }
 
       if (item instanceof Section) {
         for (Lesson lesson : ((Section)item).getLessons()) {
           if (lesson.getStepikChangeStatus() != StepikChangeStatus.UP_TO_DATE) {
-            appendChangeLine(item.getName() + "/", lesson, message);
+            appendChangeLine(item.getName() + "/", lesson, message, lesson.getStepikChangeStatus().toString());
           }
+
+          // all tasks of new lesson are new
+          if (isNew(lesson)) {
+            appendChangeLine(item.getName() + "/", lesson, message, "new");
+            continue;
+          }
+
           for (Task task : lesson.taskList) {
+            String parentsLine = item.getName() + "/" + lesson.getName() + "/";
             if (task.getStepikChangeStatus() != StepikChangeStatus.UP_TO_DATE) {
-              String parentsLine = item.getName() + "/" + lesson.getName() + "/";
-              appendChangeLine(parentsLine, task, message);
+              appendChangeLine(parentsLine, task, message, task.getStepikChangeStatus().toString());
+            }
+            if (isNew(task)) {
+              appendChangeLine(parentsLine, task, message, "new");
             }
           }
         }
       }
 
       if (item instanceof Lesson) {
+        // all tasks of new lesson are new
+        if (isNew(item)) {
+          continue;
+        }
+
         for (Task task : ((Lesson)item).taskList) {
           if (task.getStepikChangeStatus() != StepikChangeStatus.UP_TO_DATE) {
-            appendChangeLine(item.getName() + "/", task, message);
+            appendChangeLine(item.getName() + "/", task, message, task.getStepikChangeStatus().toString());
           }
         }
       }
@@ -68,12 +88,19 @@ public class CCShowChangedFiles extends DumbAwareAction {
     return message;
   }
 
-  private static void appendChangeLine(@NotNull String parentsLine, @NotNull StudyItem item, @NotNull StringBuilder stringBuilder) {
+  private static boolean isNew(StudyItem item) {
+    return item.getId() == 0;
+  }
+
+  private static void appendChangeLine(@NotNull String parentsLine,
+                                       @NotNull StudyItem item,
+                                       @NotNull StringBuilder stringBuilder,
+                                       @NotNull String status) {
     stringBuilder
       .append(parentsLine)
       .append(item.getName())
       .append(" ")
-      .append(item.getStepikChangeStatus())
+      .append(status)
       .append("\n");
   }
 
