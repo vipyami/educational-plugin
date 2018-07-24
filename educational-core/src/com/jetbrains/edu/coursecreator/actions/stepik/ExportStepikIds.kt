@@ -61,6 +61,8 @@ class ExportStepikIds : DumbAwareAction("Export Stepik Ids", "Exports Stepik ids
     }
 
     val courseFromStepik = StepikConnector.getCourseFromStepik(EduSettings.getInstance().user, course.id, (course as RemoteCourse).isCompatible)!!
+    StepikConnector.fillItems(courseFromStepik)
+    courseFromStepik.init(null, null, false)
     setStepikChangeStatuses(project, courseFromStepik)
   }
 

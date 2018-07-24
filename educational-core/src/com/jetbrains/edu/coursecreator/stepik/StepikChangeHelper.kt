@@ -34,14 +34,13 @@ fun getChangedItems(project: Project, courseFromServer: RemoteCourse): StepikCha
   stepikChanges.sectionInfosToUpdate = sectionsInfoToUpdate(course, sectionIdsFromServer, courseFromServer)
 
   val serverLessonIds = lessonIds(courseFromServer)
-  val allLessons = course.lessons.plus(course.sections
-                                         .filter { !stepikChanges.newSections.contains(it) }
-                                         .flatMap { it.lessons })
+  val allLessons = allLessons(course)
+
   stepikChanges.newLessons = allLessons.filter { lesson -> !serverLessonIds.contains(lesson.id) }
   stepikChanges.lessonsInfoToUpdate = lessonsInfoToUpdate(course, serverLessonIds, courseFromServer)
 
-  val updateCandidates = course.lessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
-  val lessonsById = courseFromServer.lessons.associateBy({ it.id }, { it })
+  val updateCandidates = allLessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
+  val lessonsById = allLessons(courseFromServer).associateBy({ it.id }, { it })
   stepikChanges.tasksToPostByLessonIndex = updateCandidates
     .filter { !stepikChanges.newLessons.contains(it) }
     .associateBy({ it.index },
@@ -54,6 +53,9 @@ fun getChangedItems(project: Project, courseFromServer: RemoteCourse): StepikCha
 
   return stepikChanges
 }
+
+private fun allLessons(course: RemoteCourse) =
+  course.lessons.plus(course.sections.flatMap { it.lessons })
 
 fun setStepikChangeStatuses(project: Project,
                             courseFromStepik: RemoteCourse) {
