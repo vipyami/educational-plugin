@@ -2,7 +2,6 @@ package com.jetbrains.edu.coursecreator.stepik
 
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.NullUtils
 import com.intellij.testFramework.runInEdtAndWait
 import com.jetbrains.edu.learning.EduUtils
 import com.jetbrains.edu.learning.StudyTaskManager
@@ -210,8 +209,12 @@ private fun AnswerPlaceholder.isEqualTo(otherAnswerPlaceholder: AnswerPlaceholde
     return false
   }
 
-  if (NullUtils.hasNull(placeholderDependency, otherAnswerPlaceholder.placeholderDependency)) {
+  if (placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null) {
     return false
+  }
+
+  if (placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null) {
+    return true
   }
 
   if (!placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)) {
