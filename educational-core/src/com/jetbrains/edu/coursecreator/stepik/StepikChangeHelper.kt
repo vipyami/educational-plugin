@@ -56,8 +56,7 @@ fun getChangedItems(project: Project, courseFromServer: RemoteCourse): StepikCha
 private fun allLessons(course: RemoteCourse) =
   course.lessons.plus(course.sections.flatMap { it.lessons })
 
-fun setStepikChangeStatuses(project: Project,
-                            courseFromStepik: RemoteCourse) {
+fun setStepikChangeStatuses(project: Project, courseFromStepik: RemoteCourse) {
   val course = StudyTaskManager.getInstance(project).course as RemoteCourse
   val stepikChanges = getChangedItems(project, courseFromStepik)
 
