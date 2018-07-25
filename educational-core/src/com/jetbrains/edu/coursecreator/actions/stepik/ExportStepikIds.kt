@@ -59,11 +59,6 @@ class ExportStepikIds : DumbAwareAction("Export Stepik Ids", "Exports Stepik ids
       VfsUtil.saveText(stepikIdsFile, json)
       FileEditorManager.getInstance(project).openFile(stepikIdsFile, true)
     }
-
-    val courseFromStepik = StepikConnector.getCourseFromStepik(EduSettings.getInstance().user, course.id, (course as RemoteCourse).isCompatible) ?: error("Failed to get course ${course.id}")
-    StepikConnector.fillItems(courseFromStepik)
-    courseFromStepik.init(null, null, false)
-    StepikChangeRetriever(project, courseFromStepik).setStepikChangeStatuses()
   }
 
   override fun update(e: AnActionEvent) {

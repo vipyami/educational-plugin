@@ -27,6 +27,8 @@ public class Course extends ItemContainer {
   @Expose @SerializedName("programming_language") private String myProgrammingLanguage = EduNames.PYTHON;
   @Expose @SerializedName("language") private String myLanguageCode = "en";
 
+  private boolean myIsFromZip = false;
+
   //this field is used to distinguish ordinary and CheckIO projects,
   //"PyCharm" is used here for historical reasons
   private String courseType = EduNames.PYCHARM;
@@ -107,6 +109,14 @@ public class Course extends ItemContainer {
   @NotNull
   public List<StepicUser> getAuthors() {
     return authors;
+  }
+
+  public boolean isFromZip() {
+    return myIsFromZip;
+  }
+
+  public void setFromZip(boolean fromZip) {
+    myIsFromZip = fromZip;
   }
 
   public static String getAuthorsString(@NotNull List<StepicUser> authors) {
