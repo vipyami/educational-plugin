@@ -142,6 +142,7 @@ public class Lesson extends StudyItem {
     myUpdateDate = updateDate;
   }
 
+  @Transient
   public boolean isPublic() {
     return is_public;
   }
