@@ -26,7 +26,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
       }
     }.asRemote()
 
-    setStepikChangeStatuses(project, localCourse)
+    StepikChangeRetriever(project, localCourse).setStepikChangeStatuses()
     checkOtherItemsUpToDate(localCourse)
   }
 
@@ -42,7 +42,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
 
     val courseFromServer = localCourse.copy() as RemoteCourse
     addNewLesson("lesson2", 2, localCourse, localCourse, EduUtils.getCourseDir(project))
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse, CONTENT)
   }
 
@@ -59,7 +59,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val courseFromServer = localCourse.copy() as RemoteCourse
     addNewSection("section1", 2, localCourse, EduUtils.getCourseDir(project))
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse, CONTENT)
   }
 
@@ -76,7 +76,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val courseFromServer = localCourse.copy() as RemoteCourse
     localCourse.lessons.single().name = "renamed"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse.lessons.single(), INFO)
   }
 
@@ -93,7 +93,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val courseFromServer = localCourse.copy() as RemoteCourse
     localCourse.lessons.single().index = 2
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse.lessons.single(), INFO)
   }
 
@@ -112,7 +112,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val courseFromServer = localCourse.copy() as RemoteCourse
     localCourse.sections.single().name = "renamed"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse.sections.single(), INFO)
   }
 
@@ -131,7 +131,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val courseFromServer = localCourse.copy() as RemoteCourse
     localCourse.sections.single().index = 2
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse.sections.single(), INFO)
   }
 
@@ -151,7 +151,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
       }
     }.asRemote()
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(localCourse.lessons.single(), CONTENT)
   }
 
@@ -168,7 +168,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList[0]
     changedTask.name = "renamed"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -185,7 +185,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList[0]
     changedTask.index = 2
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -202,7 +202,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList[0]
     changedTask.taskFiles["new.txt"] = TaskFile()
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -219,7 +219,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList[0]
     changedTask.descriptionText = "new text"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -236,7 +236,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList[0]
     changedTask.additionalFiles["file.txt"] = "additional file"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -253,7 +253,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList.single()
     changedTask.taskFiles.values.single().name = "renamed.txt"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -270,7 +270,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList.single()
     changedTask.taskFiles.values.single().text = "text"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -287,7 +287,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedTask = localCourse.lessons.single().taskList.single()
     changedTask.taskFiles.values.single().answerPlaceholders.add(0, AnswerPlaceholder())
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -307,7 +307,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedPlaceholder = changedTask.taskFiles.values.single().answerPlaceholders.single()
     changedPlaceholder.offset = 10
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -327,7 +327,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedPlaceholder = changedTask.taskFiles.values.single().answerPlaceholders.single()
     changedPlaceholder.possibleAnswer = "new answer"
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -347,7 +347,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedPlaceholder = changedTask.taskFiles.values.single().answerPlaceholders.single()
     changedPlaceholder.length = 1
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -367,7 +367,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedPlaceholder = changedTask.taskFiles.values.single().answerPlaceholders.single()
     changedPlaceholder.index = 2
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 
@@ -387,7 +387,7 @@ class StepikStatusesForImportedCourseTest : EduTestCase() {
     val changedPlaceholder = changedTask.taskFiles.values.single().answerPlaceholders.single()
     changedPlaceholder.placeholderDependency = AnswerPlaceholderDependency()
 
-    setStepikChangeStatuses(project, courseFromServer)
+    StepikChangeRetriever(project, courseFromServer).setStepikChangeStatuses()
     checkStatus(changedTask, INFO_AND_CONTENT)
   }
 }

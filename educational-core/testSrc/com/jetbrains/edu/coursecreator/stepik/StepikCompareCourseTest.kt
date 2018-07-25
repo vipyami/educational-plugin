@@ -58,7 +58,7 @@ class StepikCompareCourseTest : EduTestCase() {
 
     val courseFromServer = localCourse.copy() as RemoteCourse
     val newSection = addNewSection("section1", 2, localCourse, EduUtils.getCourseDir(project))
-    val expectedInfo = StepikChangesInfo(newSections = arrayListOf(newSection))
+    val expectedInfo = StepikChangesInfo(newSections = arrayListOf(newSection), newLessons = newSection.lessons)
 
     checkChangedItems(courseFromServer, expectedInfo)
   }
@@ -390,7 +390,7 @@ class StepikCompareCourseTest : EduTestCase() {
   }
 
   private fun checkChangedItems(courseFromServer: RemoteCourse, expected: StepikChangesInfo) {
-    val actual = getChangedItems(project, courseFromServer)
+    val actual = StepikChangeRetriever(project, courseFromServer).getChangedItems()
     assertEquals(expected, actual)
   }
 }

@@ -10,7 +10,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.vfs.VfsUtil
 import com.jetbrains.edu.coursecreator.CCUtils
-import com.jetbrains.edu.coursecreator.stepik.setStepikChangeStatuses
+import com.jetbrains.edu.coursecreator.stepik.StepikChangeRetriever
 import com.jetbrains.edu.learning.EduNames
 import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.EduUtils
@@ -60,10 +60,10 @@ class ExportStepikIds : DumbAwareAction("Export Stepik Ids", "Exports Stepik ids
       FileEditorManager.getInstance(project).openFile(stepikIdsFile, true)
     }
 
-    val courseFromStepik = StepikConnector.getCourseFromStepik(EduSettings.getInstance().user, course.id, (course as RemoteCourse).isCompatible)!!
+    val courseFromStepik = StepikConnector.getCourseFromStepik(EduSettings.getInstance().user, course.id, (course as RemoteCourse).isCompatible) ?: error("Failed to get course ${course.id}")
     StepikConnector.fillItems(courseFromStepik)
     courseFromStepik.init(null, null, false)
-    setStepikChangeStatuses(project, courseFromStepik)
+    StepikChangeRetriever(project, courseFromStepik).setStepikChangeStatuses()
   }
 
   override fun update(e: AnActionEvent) {
