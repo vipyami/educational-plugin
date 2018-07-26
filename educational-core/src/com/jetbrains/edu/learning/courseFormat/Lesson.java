@@ -147,6 +147,7 @@ public class Lesson extends StudyItem {
     return is_public;
   }
 
+  @Transient
   public void setPublic(boolean isPublic) {
     this.is_public = isPublic;
   }
