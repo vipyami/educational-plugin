@@ -88,7 +88,7 @@ public class CCShowChangedFiles extends DumbAwareAction {
     return message;
   }
 
-  private static boolean isNew(StudyItem item) {
+  private static boolean isNew(@NotNull StudyItem item) {
     return item.getId() == 0;
   }
 
