@@ -1,5 +1,6 @@
 package com.jetbrains.edu.coursecreator.stepik
 
+import com.google.common.annotations.VisibleForTesting
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.runInEdtAndWait
@@ -10,6 +11,7 @@ import com.jetbrains.edu.learning.courseFormat.ext.getVirtualFile
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.isUnitTestMode
 
+@VisibleForTesting
 data class StepikChangesInfo(var isCourseInfoChanged: Boolean = false,
                              var newSections: List<Section> = ArrayList(),
                              var sectionInfosToUpdate: List<Section> = ArrayList(),
@@ -65,7 +67,7 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
       StepikCourseChangeHandler.infoChanged(course)
     }
 
-    stepikChanges.newSections.forEach {
+    if (!stepikChanges.newSections.isEmpty()){
       StepikCourseChangeHandler.contentChanged(course)
     }
 
@@ -167,27 +169,11 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherDependency) return true
     if (otherDependency == null) return false
 
-    if (this.isVisible != otherDependency.isVisible) {
-      return false
-    }
-
-    if (this.fileName != otherDependency.fileName) {
-      return false
-    }
-
-    if (this.lessonName != otherDependency.lessonName) {
-      return false
-    }
-
-    if (this.placeholderIndex != otherDependency.placeholderIndex) {
-      return false
-    }
-
-    if (this.sectionName != otherDependency.sectionName) {
-      return false
-    }
-
-    return true
+    return isVisible != otherDependency.isVisible
+           || fileName != otherDependency.fileName
+           || lessonName != otherDependency.lessonName
+           || placeholderIndex != otherDependency.placeholderIndex
+           || sectionName != otherDependency.sectionName
   }
 
 
@@ -195,42 +181,30 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherAnswerPlaceholder) return true
     if (otherAnswerPlaceholder == null) return false
 
-    if (offset != otherAnswerPlaceholder.offset) {
-      return false
-    }
+    return offset != otherAnswerPlaceholder.offset
+           || length != otherAnswerPlaceholder.length
+           || index != otherAnswerPlaceholder.index
+           || possibleAnswer != otherAnswerPlaceholder.possibleAnswer
+           || placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null
+           || placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null
+           || !placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)
 
-    if (length != otherAnswerPlaceholder.length) {
-      return false
-    }
-
-    if (index != otherAnswerPlaceholder.index) {
-      return false
-    }
-
-    if (possibleAnswer != otherAnswerPlaceholder.possibleAnswer) {
-      return false
-    }
-
-    if (placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null) {
-      return false
-    }
-
-    if (placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null) {
-      return true
-    }
-
-    if (!placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)) {
-      return false
-    }
-
-    return true
   }
 
 
   private fun TaskFile.isEqualTo(otherTaskFile: TaskFile?): Boolean {
     if (this === otherTaskFile) return true
+    if (otherTaskFile == null) return false
 
-    val otherPlaceholders = otherTaskFile!!.answerPlaceholders
+    if (name != otherTaskFile.name) {
+      return false
+    }
+
+    if (text != otherTaskFile.text) {
+      return false
+    }
+
+    val otherPlaceholders = otherTaskFile.answerPlaceholders
     if (answerPlaceholders.size != otherPlaceholders.size) {
       return false
     }
@@ -239,14 +213,6 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
       if (!answerPlaceholders[i].isEqualTo(otherPlaceholders[i])) {
         return false
       }
-    }
-
-    if (name != otherTaskFile.name) {
-      return false
-    }
-
-    if (text != otherTaskFile.text) {
-      return false
     }
 
     return true
