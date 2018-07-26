@@ -235,6 +235,10 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
       return false
     }
 
+    if (testsText != otherTask.testsText) {
+      return false
+    }
+
     val otherTaskFiles = otherTask.taskFiles
     if (taskFiles.size != otherTaskFiles.size) {
       return false
