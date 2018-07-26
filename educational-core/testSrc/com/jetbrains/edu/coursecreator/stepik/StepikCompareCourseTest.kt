@@ -389,6 +389,46 @@ class StepikCompareCourseTest : EduTestCase() {
     checkChangedItems(courseFromServer, expectedInfo)
   }
 
+  fun `test hints size`() {
+    val localCourse = course(courseMode = CCUtils.COURSE_MODE) {
+      lesson("lesson1") {
+        eduTask {
+          taskFile("Task.txt", "fun foo(): String = <p>TODO()</p>") {
+            placeholder(0, "Foo")
+          }
+        }
+      }
+    }.asRemote()
+
+    localCourse.lessons.single().taskList.single().taskFiles.values.single().answerPlaceholders.single().hints = listOf("hint1")
+    val courseFromServer = localCourse.copy() as RemoteCourse
+    val changedTask = localCourse.lessons.single().taskList.single()
+    changedTask.taskFiles.values.single().answerPlaceholders.single().hints = listOf("hint1", "hint2")
+
+    val expectedInfo = StepikChangesInfo(tasksToUpdateByLessonIndex = mapOf(1 to listOf(changedTask)))
+    checkChangedItems(courseFromServer, expectedInfo)
+  }
+
+  fun `test hints value`() {
+    val localCourse = course(courseMode = CCUtils.COURSE_MODE) {
+      lesson("lesson1") {
+        eduTask {
+          taskFile("Task.txt", "fun foo(): String = <p>TODO()</p>") {
+            placeholder(0, "Foo")
+          }
+        }
+      }
+    }.asRemote()
+
+    localCourse.lessons.single().taskList.single().taskFiles.values.single().answerPlaceholders.single().hints = listOf("hint1")
+    val courseFromServer = localCourse.copy() as RemoteCourse
+    val changedTask = localCourse.lessons.single().taskList.single()
+    changedTask.taskFiles.values.single().answerPlaceholders.single().hints = listOf("hint2")
+
+    val expectedInfo = StepikChangesInfo(tasksToUpdateByLessonIndex = mapOf(1 to listOf(changedTask)))
+    checkChangedItems(courseFromServer, expectedInfo)
+  }
+
   private fun checkChangedItems(courseFromServer: RemoteCourse, expected: StepikChangesInfo) {
     val actual = StepikChangeRetriever(project, courseFromServer).getChangedItems()
     assertEquals(expected, actual)

@@ -169,11 +169,11 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherDependency) return true
     if (otherDependency == null) return false
 
-    return isVisible != otherDependency.isVisible
-           || fileName != otherDependency.fileName
-           || lessonName != otherDependency.lessonName
-           || placeholderIndex != otherDependency.placeholderIndex
-           || sectionName != otherDependency.sectionName
+    return isVisible == otherDependency.isVisible
+           && fileName == otherDependency.fileName
+           && lessonName == otherDependency.lessonName
+           && placeholderIndex == otherDependency.placeholderIndex
+           && sectionName == otherDependency.sectionName
   }
 
 
@@ -181,16 +181,16 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherAnswerPlaceholder) return true
     if (otherAnswerPlaceholder == null) return false
 
-    return offset != otherAnswerPlaceholder.offset
-           || length != otherAnswerPlaceholder.length
-           || index != otherAnswerPlaceholder.index
-           || possibleAnswer != otherAnswerPlaceholder.possibleAnswer
-           || placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null
-           || placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null
-           || !placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)
+    return offset == otherAnswerPlaceholder.offset
+           && length == otherAnswerPlaceholder.length
+           && index == otherAnswerPlaceholder.index
+           && possibleAnswer == otherAnswerPlaceholder.possibleAnswer
+           && hints == otherAnswerPlaceholder.hints
+           && !(placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null)
+           && !(placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null)
+           && placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)
 
   }
-
 
   private fun TaskFile.isEqualTo(otherTaskFile: TaskFile?): Boolean {
     if (this === otherTaskFile) return true
