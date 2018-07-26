@@ -43,7 +43,7 @@ public class CCShowChangedFiles extends DumbAwareAction {
         appendChangeLine("", item, message, item.getStepikChangeStatus().toString());
       }
 
-      // we don't mark new items, so to them we have to check it's id
+      // we don't mark new items, so for them we have to check it's id
       if (isNew(item)) {
         appendChangeLine("", item, message, "new");
       }
