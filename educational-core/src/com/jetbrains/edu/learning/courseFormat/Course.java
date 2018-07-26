@@ -27,6 +27,9 @@ public class Course extends ItemContainer {
   @Expose @SerializedName("programming_language") private String myProgrammingLanguage = EduNames.PYTHON;
   @Expose @SerializedName("language") private String myLanguageCode = "en";
 
+  // flag for distinguishing courses imported from zip, from Stepik courses
+  // we use it to set StepikChangeStatus for zip-courses during generation
+  // plan to use to change appearance of these courses in courses panel
   private boolean myIsFromZip = false;
 
   //this field is used to distinguish ordinary and CheckIO projects,
