@@ -707,9 +707,9 @@ public class StepikConnector {
   }
 
   private static <T> T getFromStepik(String link, final Class<T> container) throws IOException {
-    final StepicUser user = EduSettings.getInstance().getUser();
-    final boolean isAuthorized = user != null;
-    if (isAuthorized) {
+    if (StepikUtils.isLoggedIn()) {
+      final StepicUser user = EduSettings.getInstance().getUser();
+      assert user != null;
       return StepikAuthorizedClient.getFromStepik(link, container, user);
     }
     return StepikClient.getFromStepik(link, container);
@@ -905,7 +905,7 @@ public class StepikConnector {
 
   public static String postAttempt(int id) throws IOException {
     final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
-    if (client == null || EduSettings.getInstance().getUser() == null) return "";
+    if (client == null || !StepikUtils.isLoggedIn()) return "";
     final HttpPost attemptRequest = new HttpPost(StepikNames.STEPIK_API_URL + StepikNames.ATTEMPTS);
     String attemptRequestBody = new Gson().toJson(new AttemptWrapper(id));
     attemptRequest.setEntity(new StringEntity(attemptRequestBody, ContentType.APPLICATION_JSON));
@@ -1025,7 +1025,7 @@ public class StepikConnector {
   }
 
   public static void postTheory(Task task, final Project project) {
-    if (EduSettings.getInstance().getUser() == null) {
+    if (!StepikUtils.isLoggedIn()) {
       return;
     }
     final int stepId = task.getStepId();
