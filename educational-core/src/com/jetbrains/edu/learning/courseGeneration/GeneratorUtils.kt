@@ -18,7 +18,6 @@ import com.jetbrains.edu.learning.StudyTaskManager
 import com.jetbrains.edu.learning.courseFormat.*
 import com.jetbrains.edu.learning.courseFormat.DescriptionFormat.HTML
 import com.jetbrains.edu.learning.courseFormat.DescriptionFormat.MD
-import com.jetbrains.edu.learning.courseFormat.ext.course
 import com.jetbrains.edu.learning.courseFormat.ext.dirName
 import com.jetbrains.edu.learning.courseFormat.ext.isFrameworkTask
 import com.jetbrains.edu.learning.courseFormat.ext.testTextMap
@@ -79,9 +78,6 @@ object GeneratorUtils {
   fun createLesson(lesson: Lesson, courseDir: VirtualFile) {
     if (lesson.isAdditional) {
       createAdditionalFiles(lesson, courseDir)
-      if (lesson.course is RemoteCourse) {
-        (lesson.course as RemoteCourse).additionalMaterialsUpdateDate = lesson.updateDate
-      }
     } else {
       val lessonDir = createUniqueDir(courseDir, lesson)
       val taskList = lesson.getTaskList()
