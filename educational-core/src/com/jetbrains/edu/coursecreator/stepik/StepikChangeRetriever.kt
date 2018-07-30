@@ -38,7 +38,7 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     val serverLessonIds = lessonIds(courseFromServer)
     val allLessons = allLessons(course)
 
-    stepikChanges.newLessons = allLessons.filter { it.id == 0}
+    stepikChanges.newLessons = allLessons.filter { it.id == 0 }
     stepikChanges.lessonsInfoToUpdate = lessonsInfoToUpdate(course, serverLessonIds, courseFromServer)
 
     val updateCandidates = allLessons.filter { lesson -> serverLessonIds.contains(lesson.id) }
@@ -67,7 +67,7 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
       StepikCourseChangeHandler.infoChanged(course)
     }
 
-    if (!stepikChanges.newSections.isEmpty()){
+    if (!stepikChanges.newSections.isEmpty()) {
       StepikCourseChangeHandler.contentChanged(course)
     }
 
