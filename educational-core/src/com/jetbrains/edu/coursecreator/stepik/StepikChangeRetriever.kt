@@ -238,39 +238,31 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (testsText != otherTask.testsText) {
       return false
     }
-
     val otherTaskFiles = otherTask.taskFiles
     if (taskFiles.size != otherTaskFiles.size) {
       return false
     }
-    for (entry in taskFiles.entries) {
+
+    return compareFiles(taskFiles, otherTaskFiles) || compareFiles(additionalFiles, otherTask.additionalFiles)
+  }
+
+  private fun compareFiles(files: Map<String, Any>, otherFiles: Map<String, Any>): Boolean {
+    for (entry in files.entries) {
       val name = entry.key
-      val taskFile = entry.value
+      val file = entry.value
 
-      if (!otherTaskFiles.containsKey(name)) {
+      if (!otherFiles.containsKey(name)) {
         return false
       }
 
-      if (!taskFile.isEqualTo(otherTaskFiles[name])) {
-        return false
-      }
-    }
-
-    val otherAdditionalFiles = otherTask.additionalFiles
-    for (entry in additionalFiles.entries) {
-      val name = entry.key
-      val text = entry.value
-
-      if (!otherAdditionalFiles.containsKey(name)) {
-        return false
-      }
-
-      if (text != otherAdditionalFiles[name]) {
-        return false
+      val otherFile = otherFiles[name]
+      return when (file) {
+        is String -> file != otherFile
+        is TaskFile -> file.isEqualTo(otherFile as TaskFile)
+        else -> true
       }
     }
 
     return true
   }
-
 }
