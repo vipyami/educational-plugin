@@ -186,9 +186,7 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
            && index == otherAnswerPlaceholder.index
            && possibleAnswer == otherAnswerPlaceholder.possibleAnswer
            && hints == otherAnswerPlaceholder.hints
-           && !(placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency != null)
-           && !(placeholderDependency == null && otherAnswerPlaceholder.placeholderDependency == null)
-           && placeholderDependency!!.isEqualTo(otherAnswerPlaceholder.placeholderDependency)
+           && placeholderDependency?.isEqualTo(otherAnswerPlaceholder.placeholderDependency) ?: otherAnswerPlaceholder.placeholderDependency == null
 
   }
 
@@ -196,26 +194,10 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherTaskFile) return true
     if (otherTaskFile == null) return false
 
-    if (name != otherTaskFile.name) {
-      return false
-    }
-
-    if (text != otherTaskFile.text) {
-      return false
-    }
-
-    val otherPlaceholders = otherTaskFile.answerPlaceholders
-    if (answerPlaceholders.size != otherPlaceholders.size) {
-      return false
-    }
-
-    for (i in answerPlaceholders.indices) {
-      if (!answerPlaceholders[i].isEqualTo(otherPlaceholders[i])) {
-        return false
-      }
-    }
-
-    return true
+    return name == otherTaskFile.name
+           && text == otherTaskFile.text
+           && answerPlaceholders.size == otherTaskFile.answerPlaceholders.size
+           && answerPlaceholders.zip(otherTaskFile.answerPlaceholders).all { it.first.isEqualTo(it.second) }
   }
 
 
@@ -223,30 +205,19 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
     if (this === otherTask) return true
     if (otherTask == null) return false
 
-    if (descriptionText != otherTask.descriptionText) {
-      return false
-    }
-
-    if (index != otherTask.index) {
-      return false
-    }
-
-    if (name != otherTask.name) {
-      return false
-    }
-
-    if (testsText != otherTask.testsText) {
-      return false
-    }
-    val otherTaskFiles = otherTask.taskFiles
-    if (taskFiles.size != otherTaskFiles.size) {
-      return false
-    }
-
-    return compareFiles(taskFiles, otherTaskFiles) || compareFiles(additionalFiles, otherTask.additionalFiles)
+    return descriptionText == otherTask.descriptionText
+           && index == otherTask.index
+           && name == otherTask.name
+           && testsText == otherTask.testsText
+           && compareFiles(taskFiles, otherTask.taskFiles)
+           && compareFiles(additionalFiles, otherTask.additionalFiles)
   }
 
   private fun compareFiles(files: Map<String, Any>, otherFiles: Map<String, Any>): Boolean {
+    if (files.size != otherFiles.size) {
+      return false
+    }
+
     for (entry in files.entries) {
       val name = entry.key
       val file = entry.value
