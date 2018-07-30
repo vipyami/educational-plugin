@@ -177,9 +177,8 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
   }
 
 
-  private fun AnswerPlaceholder.isEqualTo(otherAnswerPlaceholder: AnswerPlaceholder?): Boolean {
+  private fun AnswerPlaceholder.isEqualTo(otherAnswerPlaceholder: AnswerPlaceholder): Boolean {
     if (this === otherAnswerPlaceholder) return true
-    if (otherAnswerPlaceholder == null) return false
 
     return offset == otherAnswerPlaceholder.offset
            && length == otherAnswerPlaceholder.length
@@ -190,9 +189,8 @@ class StepikChangeRetriever(val project: Project, private val courseFromServer: 
 
   }
 
-  private fun TaskFile.isEqualTo(otherTaskFile: TaskFile?): Boolean {
+  private fun TaskFile.isEqualTo(otherTaskFile: TaskFile): Boolean {
     if (this === otherTaskFile) return true
-    if (otherTaskFile == null) return false
 
     return name == otherTaskFile.name
            && text == otherTaskFile.text
