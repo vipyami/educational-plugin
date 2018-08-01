@@ -11,6 +11,7 @@ import com.jetbrains.edu.learning.StudyTaskManager;
 import com.jetbrains.edu.learning.courseFormat.*;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import org.jetbrains.annotations.NotNull;
+import org.jsoup.helper.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,21 +100,15 @@ public class CCShowChangedFiles extends DumbAwareAction {
   }
 
   private static String getPath(@NotNull StudyItem item) {
-    ArrayList<StudyItem> parents = new ArrayList<>();
+    ArrayList<String> parents = new ArrayList<>();
     StudyItem parent = item.getParent();
     while (!(parent instanceof Course)) {
-      parents.add(parent);
+      parents.add(parent.getName());
       parent = parent.getParent();
     }
     Collections.reverse(parents);
 
-    StringBuilder builder = new StringBuilder();
-    for (StudyItem studyItem : parents) {
-      builder.append(studyItem.getName());
-      builder.append("/");
-    }
-    builder.append(item.getName());
-
-    return builder.toString();
+    String parentsLine = StringUtil.join(parents, "/");
+    return parentsLine + "/" + item.getName();
   }
 }
