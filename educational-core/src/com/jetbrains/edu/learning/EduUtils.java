@@ -51,8 +51,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.*;
-import com.intellij.openapi.vfs.newvfs.NewVirtualFile;
-import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -61,13 +59,11 @@ import com.intellij.openapi.wm.impl.IdeFrameImpl;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.content.Content;
 import com.intellij.util.PathUtil;
 import com.intellij.util.PlatformUtils;
-import com.intellij.util.Time;
 import com.intellij.util.TimeoutUtil;
 import com.intellij.util.io.ZipUtil;
 import com.intellij.util.io.zip.JBZipEntry;
@@ -1278,10 +1274,5 @@ public class EduUtils {
     }
     String relativePath = FileUtil.getRelativePath(taskDir.getPath(), createdFile.getPath(), VfsUtilCore.VFS_SEPARATOR_CHAR);
     return relativePath != null && relativePath.startsWith(sourceDir);
-  }
-
-  public static boolean isAfter(Date date, Date date2) {
-    long diff = date.getTime() - date2.getTime();
-    return diff > Time.MINUTE;
   }
 }
