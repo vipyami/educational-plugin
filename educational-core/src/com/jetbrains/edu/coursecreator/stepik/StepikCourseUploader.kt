@@ -37,6 +37,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
     processSectionChanges(lastUpdateDate)
     processLessonChanges(lastUpdateDate)
     processTaskChanges()
+    updateAdditionalMaterials(project, course.id)
 
     if (isUpToDate()) {
       val notification = Notification("upload.course", "Nothing to upload", "All course items is up to date", NotificationType.INFORMATION)
