@@ -19,9 +19,9 @@ package com.jetbrains.edu.learning.stepik
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.jetbrains.edu.coursecreator.stepik.CCStepikConnector
+import com.jetbrains.edu.learning.EduSettings
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
 import com.jetbrains.edu.learning.courseFormat.StepikChangeStatus
-import com.jetbrains.edu.learning.courseFormat.ext.course
 import com.jetbrains.edu.learning.courseFormat.tasks.CodeTask
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.courseFormat.tasks.TheoryTask
@@ -36,13 +36,13 @@ object StepikUtils {
   fun wrapStepikTasks(task: Task, text: String, adaptive: Boolean): String {
     var finalText = text
     val course = task.course
-    if (task is TheoryTask && course != null && course.isAdaptive) {
+    if (task is TheoryTask && course.isAdaptive) {
       finalText += "<br/><br/><b>Note</b>: This theory task aims to help you solve difficult tasks. "
     }
     else if (task is CodeTask && adaptive) {
       finalText += "<br/><br/><b>Note</b>: Use standard input to obtain input for the task."
     }
-    if (course != null && course.isStudy) {
+    if (course.isStudy) {
       finalText += getFooterWithLink(task, adaptive)
     }
 
@@ -54,7 +54,7 @@ object StepikUtils {
     return "<div class=\"footer\"><a href=$link>Leave a comment</a></div>"
   }
 
-  private fun getLink(task: Task?, stepNumber: Int): String? {
+  fun getLink(task: Task?, stepNumber: Int): String? {
     if (task == null) {
       return null
     }
@@ -93,12 +93,15 @@ object StepikUtils {
     else {
       val topLevelLesson = course.lessons.first { it.stepikChangeStatus == StepikChangeStatus.UP_TO_DATE }
       val id = CCStepikConnector.findTopLevelLessonsSection(project, topLevelLesson)
-      if (id != -1) {
-        return id
+      return if (id != -1) {
+        id
       }
       else {
-        return CCStepikConnector.postTopLevelLessonsSection(project, course)
+        CCStepikConnector.postTopLevelLessonsSection(project, course)
       }
     }
   }
+
+  @JvmStatic
+  fun isLoggedIn() = EduSettings.getInstance().user != null
 }
