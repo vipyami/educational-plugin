@@ -44,6 +44,11 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
     }
     else {
       pushChanges()
+      course.setUpdated()
+
+      // TODO: after merging changes about isUpToDateExtension, inline this in course#setUpdated
+      // fix for the case when we deleted section that was changed the last
+      course.updateDate = lastUpdateDate
       course.setStatusRecursively(StepikChangeStatus.UP_TO_DATE)
     }
   }
@@ -267,6 +272,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
       }
     }
     else {
+      course.sectionIds = emptyList()
       sectionsToPush.addAll(course.sections.filter { it.id == 0 })
 
       for (sectionToPush in sectionsToPush) {
