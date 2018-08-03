@@ -104,11 +104,10 @@ public class CCStepikConnector {
     if (currentUser != null) {
       final List<StepicUser> courseAuthors = course.getAuthors();
       for (int i = 0; i < courseAuthors.size(); i++) {
-        if (courseAuthors.size() > i) {
-          final StepicUser courseAuthor = courseAuthors.get(i);
-          currentUser.setFirstName(courseAuthor.getFirstName());
-          currentUser.setLastName(courseAuthor.getLastName());
-        }
+        courseAuthors.size();
+        final StepicUser courseAuthor = courseAuthors.get(i);
+        currentUser.setFirstName(courseAuthor.getFirstName());
+        currentUser.setLastName(courseAuthor.getLastName());
       }
       course.setAuthors(Collections.singletonList(currentUser));
     }
