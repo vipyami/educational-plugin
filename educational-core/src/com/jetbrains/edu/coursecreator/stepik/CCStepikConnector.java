@@ -89,7 +89,7 @@ public class CCStepikConnector {
     });
   }
 
-  // public for tests
+  @VisibleForTesting
   public static void postCourse(@NotNull final Project project, @NotNull Course course) {
     if (!checkIfAuthorized(project, "post course")) return;
 
