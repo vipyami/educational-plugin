@@ -20,7 +20,8 @@ import com.jetbrains.edu.learning.courseFormat.ext.CourseExt;
 import com.jetbrains.edu.learning.statistics.EduUsagesCollector;
 import org.jetbrains.annotations.NotNull;
 
-import static com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.*;
+import static com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.postCourseWithProgress;
+import static com.jetbrains.edu.coursecreator.stepik.CCStepikConnector.wrapUnpushedLessonsIntoSections;
 
 public class CCPushCourse extends DumbAwareAction {
 
@@ -65,7 +66,6 @@ public class CCPushCourse extends DumbAwareAction {
         public void run(@NotNull ProgressIndicator indicator) {
           indicator.setIndeterminate(false);
           new StepikCourseUploader(project, (RemoteCourse)course).updateCourse();
-          showNotification(project, "Course is updated", openOnStepikAction("/course/" + course.getId()));
         }
       });
     }

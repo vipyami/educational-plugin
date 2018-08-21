@@ -50,6 +50,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
       // fix for the case when we deleted section that was changed the last
       course.updateDate = lastUpdateDate
       course.setStatusRecursively(StepikChangeStatus.UP_TO_DATE)
+      showNotification(project, "Course is updated", openOnStepikAction("/course/" + course.id))
     }
   }
 
@@ -261,8 +262,9 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
       // process lessons moved to top-level
 
       val section = StepikConnector.getSection(courseInfo.sectionIds[0])
+      val lessonsFromSection = StepikConnector.getLessonsFromUnits(courseInfo, section.units.map { it.toString() }.toTypedArray(), false)
       val topLevelLessonsIds = course.lessons.map { it.id }
-      for (lesson in section.lessons) {
+      for (lesson in lessonsFromSection) {
         if (lesson.id !in topLevelLessonsIds) {
           val isMoved = lesson.id in allLessons
           if (!isMoved && lesson.updateDate <= lastUpdateDate) {
@@ -273,21 +275,20 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
     }
     else {
       course.sectionIds = emptyList()
-      sectionsToPush.addAll(course.sections.filter { it.id == 0 })
+    }
+    sectionsToPush.addAll(course.sections.filter { it.id == 0 })
 
-      for (sectionToPush in sectionsToPush) {
-        lessonsToMove.addAll(sectionToPush.lessons.filter { it.id > 0 })
-        lessonsToPush.addAll(sectionToPush.lessons.filter { it.id == 0 })
-      }
+    for (sectionToPush in sectionsToPush) {
+      lessonsToMove.addAll(sectionToPush.lessons.filter { it.id > 0 })
+      lessonsToPush.addAll(sectionToPush.lessons.filter { it.id == 0 })
+    }
 
-      //remove additional materials sections
-      val remoteSectionIds = courseInfo.sectionIds.subList(0, courseInfo.sectionIds.size - 1)
-      val sections = StepikConnector.getSections(remoteSectionIds.map { it.toString() }.toTypedArray())
-      val localSectionIds = course.sections.map { it.id }
-      for (section in sections) {
-        if (section.id !in localSectionIds && section.updateDate <= lastUpdateDate) {
-          sectionsToDelete.add(section.id)
-        }
+    val remoteSectionIds = courseInfo.sectionIds.subList(0, courseInfo.sectionIds.size - 1)
+    val sections = StepikConnector.getSections(remoteSectionIds.map { it.toString() }.toTypedArray())
+    val localSectionIds = course.sections.map { it.id }
+    for (section in sections) {
+      if ((section.id !in localSectionIds && section.id !in course.sectionIds) && section.updateDate <= lastUpdateDate) {
+        sectionsToDelete.add(section.id)
       }
     }
   }
