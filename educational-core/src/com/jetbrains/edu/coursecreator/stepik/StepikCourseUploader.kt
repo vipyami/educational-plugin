@@ -10,25 +10,24 @@ import com.jetbrains.edu.learning.courseFormat.Section
 import com.jetbrains.edu.learning.courseFormat.StepikChangeStatus
 import com.jetbrains.edu.learning.courseFormat.tasks.Task
 import com.jetbrains.edu.learning.stepik.StepikConnector
-import com.jetbrains.edu.learning.stepik.StepikUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
 class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
   private var courseInfoToUpdate = false
 
-  private var sectionsToPush: ArrayList<Section> = ArrayList()
-  private var sectionsToDelete: ArrayList<Int> = ArrayList()
-  private var sectionsInfoToUpdate: ArrayList<Section> = ArrayList()
+  private var sectionsToPush: MutableList<Section> = ArrayList()
+  private var sectionsToDelete: MutableList<Int> = ArrayList()
+  private var sectionsInfoToUpdate: MutableList<Section> = ArrayList()
 
-  private val lessonsToPush: ArrayList<Lesson> = ArrayList()
-  private var lessonsToDelete: ArrayList<Int> = ArrayList()
-  private var lessonsInfoToUpdate: ArrayList<Lesson> = ArrayList()
-  private var lessonsToMove: ArrayList<Lesson> = ArrayList()
+  private val lessonsToPush: MutableList<Lesson> = ArrayList()
+  private var lessonsToDelete: MutableList<Int> = ArrayList()
+  private var lessonsInfoToUpdate: MutableList<Lesson> = ArrayList()
+  private var lessonsToMove: MutableList<Lesson> = ArrayList()
 
-  private val tasksToPush: ArrayList<Task> = ArrayList()
-  private var tasksToDelete: ArrayList<Int> = ArrayList()
-  private var tasksToUpdate: ArrayList<Task> = ArrayList()
+  private val tasksToPush: MutableList<Task> = ArrayList()
+  private var tasksToDelete: MutableList<Int> = ArrayList()
+  private var tasksToUpdate: MutableList<Task> = ArrayList()
 
   fun updateCourse() {
     val lastUpdateDate = course.lastUpdateDate()
@@ -91,7 +90,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
     }
 
     lessonsToMove.forEach {
-      val sectionId = if (it.section == null) StepikUtils.getTopLevelSectionId(project, course) else it.section!!.id
+      val sectionId = if (it.section == null) getTopLevelSectionId(project, course) else it.section!!.id
       deleteUnit(it.unitId)
       it.unitId = postUnit(it.id, it.index, sectionId, project)
     }
@@ -110,7 +109,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
       it.section!!.id
     }
     else {
-      StepikUtils.getTopLevelSectionId(project, course)
+      getTopLevelSectionId(project, course)
     }
   }
 
@@ -295,7 +294,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
 
   private fun isUpToDate(): Boolean {
     return !courseInfoToUpdate
-        &&sectionsToPush.isEmpty()
+        && sectionsToPush.isEmpty()
         && sectionsToDelete.isEmpty()
         && sectionsInfoToUpdate.isEmpty()
         && lessonsToPush.isEmpty()

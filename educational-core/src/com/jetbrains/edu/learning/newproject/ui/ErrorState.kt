@@ -5,11 +5,11 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.ui.MessageType.ERROR
 import com.intellij.openapi.ui.MessageType.WARNING
 import com.jetbrains.edu.learning.EduConfiguratorManager
+import com.jetbrains.edu.learning.EduSettings.isLoggedIn
 import com.jetbrains.edu.learning.courseFormat.Course
 import com.jetbrains.edu.learning.courseFormat.CourseCompatibility
 import com.jetbrains.edu.learning.courseFormat.RemoteCourse
 import com.jetbrains.edu.learning.getDisabledPlugins
-import com.jetbrains.edu.learning.stepik.StepikUtils.isLoggedIn
 import java.awt.Color
 
 sealed class ErrorState(

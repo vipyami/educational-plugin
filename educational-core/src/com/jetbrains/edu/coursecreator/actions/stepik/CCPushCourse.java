@@ -91,7 +91,7 @@ public class CCPushCourse extends DumbAwareAction {
       boolean hasUnpushedLessons = course.getLessons().stream().anyMatch(lesson -> lesson.getId() == 0);
       if (hasUnpushedLessons) {
         int result = Messages
-          .showYesNoDialog(project, "Since you have sections, we have to wrap top-level lessons into section before upload",
+          .showYesNoDialog(project, "Top-level lessons will be wrapped with sections as it's not allowed to have both top-level lessons and sections",
                            "Wrap Lessons Into Sections", "Wrap and Post", "Cancel", null);
         if (result == Messages.YES) {
           wrapUnpushedLessonsIntoSections(project, course);

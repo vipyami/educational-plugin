@@ -41,6 +41,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.fest.util.VisibleForTesting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,9 +104,7 @@ public class CCStepikConnector {
     final StepicUser currentUser = StepikAuthorizedClient.getCurrentUser();
     if (currentUser != null) {
       final List<StepicUser> courseAuthors = course.getAuthors();
-      for (int i = 0; i < courseAuthors.size(); i++) {
-        courseAuthors.size();
-        final StepicUser courseAuthor = courseAuthors.get(i);
+      for (final StepicUser courseAuthor : courseAuthors) {
         currentUser.setFirstName(courseAuthor.getFirstName());
         currentUser.setLastName(courseAuthor.getLastName());
       }
@@ -192,12 +191,12 @@ public class CCStepikConnector {
     }
   }
 
-  private static String getAdminsGroupId(String responseString) {
+  private static String getAdminsGroupId(@NotNull String responseString) {
     JsonObject coursesObject = new JsonParser().parse(responseString).getAsJsonObject();
     return coursesObject.get("courses").getAsJsonArray().get(0).getAsJsonObject().get("admins_group").getAsString();
   }
 
-  public static void wrapUnpushedLessonsIntoSections(Project project, Course course) {
+  public static void wrapUnpushedLessonsIntoSections(@NotNull Project project, @NotNull Course course) {
     ApplicationManager.getApplication().invokeAndWait(() -> {
       List<Lesson> lessons = course.getLessons();
       for (Lesson lesson : lessons) {
@@ -230,12 +229,12 @@ public class CCStepikConnector {
 
   private static void postTopLevelLessons(@NotNull Project project, @NotNull RemoteCourse course) {
     final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
-    final int sectionId = postTopLevelLessonsSection(project, course);
+    final int sectionId = postSectionForTopLevelLessons(project, course);
     course.setSectionIds(Collections.singletonList(sectionId));
     postLessons(project, indicator, course, sectionId, course.getLessons());
   }
 
-  public static int postTopLevelLessonsSection(@NotNull Project project, @NotNull RemoteCourse course) {
+  public static int postSectionForTopLevelLessons(@NotNull Project project, @NotNull RemoteCourse course) {
     Section section = new Section();
     section.setName(course.getName());
     section.setPosition(1);
@@ -312,9 +311,9 @@ public class CCStepikConnector {
 
   private static void postLessons(@NotNull Project project,
                                   @Nullable ProgressIndicator indicator,
-                                  RemoteCourse course,
+                                  @NotNull RemoteCourse course,
                                   int sectionId,
-                                  List<Lesson> lessons) {
+                                  @NotNull List<Lesson> lessons) {
     int position = 1;
     for (Lesson lesson : lessons) {
       if (indicator != null) {
@@ -331,14 +330,14 @@ public class CCStepikConnector {
   }
 
   private static boolean checkIfAuthorized(@NotNull Project project, @NotNull String failedActionName) {
-    if (!StepikUtils.isLoggedIn()) {
+    if (!EduSettings.isLoggedIn()) {
       showStepikNotification(project, NotificationType.ERROR, failedActionName);
       return false;
     }
     return true;
   }
 
-  public static void postAdditionalFiles(Course course, @NotNull final Project project, int id, int position) {
+  public static void postAdditionalFiles(@NotNull Course course, @NotNull final Project project, int id, int position) {
     final Lesson lesson = CCUtils.createAdditionalLesson(course, project, StepikNames.PYCHARM_ADDITIONAL);
     if (lesson != null) {
       final ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
@@ -353,7 +352,7 @@ public class CCStepikConnector {
     }
   }
 
-  public static void updateAdditionalFiles(Course course, @NotNull final Project project, Lesson lesson) {
+  public static void updateAdditionalFiles(@NotNull Course course, @NotNull final Project project, Lesson lesson) {
     final Lesson postedLesson = CCUtils.createAdditionalLesson(course, project, StepikNames.PYCHARM_ADDITIONAL);
     if (postedLesson != null) {
       postedLesson.setId(lesson.getId());
@@ -372,7 +371,7 @@ public class CCStepikConnector {
     }
   }
 
-  public static int postUnit(int lessonId, int position, int sectionId, Project project) {
+  public static int postUnit(int lessonId, int position, int sectionId, @NotNull Project project) {
     if (!checkIfAuthorized(project, "postUnit")) return lessonId;
 
     final HttpPost request = new HttpPost(StepikNames.STEPIK_API_URL + StepikNames.UNITS);
@@ -413,7 +412,7 @@ public class CCStepikConnector {
     return -1;
   }
 
-  public static void updateUnit(int unitId, int lessonId, int position, int sectionId, Project project) {
+  public static void updateUnit(int unitId, int lessonId, int position, int sectionId, @NotNull Project project) {
     if (!checkIfAuthorized(project, "updateUnit")) return;
 
     final HttpPut request = new HttpPut(StepikNames.STEPIK_API_URL + StepikNames.UNITS + "/" + unitId);
@@ -709,8 +708,8 @@ public class CCStepikConnector {
   }
 
   public static Lesson updateLesson(@NotNull final Project project,
-                                 @NotNull final Lesson lesson,
-                                 boolean showNotification, int sectionId) {
+                                    @NotNull final Lesson lesson,
+                                    boolean showNotification, int sectionId) {
     Lesson postedLesson = updateLessonInfo(project, lesson, showNotification, sectionId);
 
     if (postedLesson != null) {
@@ -750,7 +749,7 @@ public class CCStepikConnector {
     }
   }
 
-  public static void showErrorNotification(@NotNull Project project, String title, String message) {
+  public static void showErrorNotification(@NotNull Project project, @NotNull String title, @NotNull String message) {
     final Notification notification =
       new Notification(PUSH_COURSE_GROUP_ID, title, message, NotificationType.ERROR);
     notification.notify(project);
@@ -875,7 +874,7 @@ public class CCStepikConnector {
     }
   }
 
-  private static String getErrorDetail(String responseString) {
+  private static String getErrorDetail(@NotNull String responseString) {
     final JsonObject details = new JsonParser().parse(responseString).getAsJsonObject();
     final JsonElement detail = details.get("detail");
     return detail != null ? detail.getAsString() : responseString;
@@ -931,7 +930,7 @@ public class CCStepikConnector {
     }
   }
 
-  public static boolean postTask(final Project project, @NotNull final Task task, final int lessonId) {
+  public static boolean postTask(@NotNull final Project project, @NotNull final Task task, final int lessonId) {
     if (!checkIfAuthorized(project, "postTask")) return false;
     if (task instanceof ChoiceTask || task instanceof CodeTask) return false;
 
@@ -969,5 +968,37 @@ public class CCStepikConnector {
     }
 
     return false;
+  }
+
+  public static int getTopLevelSectionId(@NotNull Project project, @NotNull RemoteCourse course) {
+    if (!course.getSectionIds().isEmpty()) {
+      return course.getSectionIds().get(0);
+    }
+    else {
+      Lesson topLevelLesson = getTopLevelLesson(course);
+      if (topLevelLesson == null) {
+        LOG.warn("Failed to find top-level lesson for a course: " + course.getId());
+        return -1;
+      }
+
+      int id = findTopLevelLessonsSection(project, topLevelLesson);
+      if (id != -1) {
+        return id;
+      }
+      else {
+        return postSectionForTopLevelLessons(project, course);
+      }
+    }
+  }
+
+  @Nullable
+  private static Lesson getTopLevelLesson(RemoteCourse course) {
+    for (Lesson lesson : course.getLessons()) {
+      if (lesson.getStepikChangeStatus() == StepikChangeStatus.UP_TO_DATE) {
+        return lesson;
+      }
+    }
+
+    return null;
   }
 }

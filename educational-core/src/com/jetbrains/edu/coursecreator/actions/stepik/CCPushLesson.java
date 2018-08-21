@@ -20,7 +20,6 @@ import com.jetbrains.edu.learning.courseFormat.ext.CourseExt;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.stepik.StepikConnector;
 import com.jetbrains.edu.learning.stepik.StepikNames;
-import com.jetbrains.edu.learning.stepik.StepikUtils;
 import com.jetbrains.edu.learning.stepik.StepikWrappers;
 import com.twelvemonkeys.lang.StringUtil;
 import org.jetbrains.annotations.NotNull;
@@ -141,7 +140,7 @@ public class CCPushLesson extends DumbAwareAction {
         sectionId = lesson.getSection().getId();
       }
       else {
-        sectionId = StepikUtils.getTopLevelSectionId(project, (RemoteCourse)course);
+        sectionId = CCStepikConnector.getTopLevelSectionId(project, (RemoteCourse)course);
       }
       Lesson updatedLesson = CCStepikConnector.updateLesson(project, lesson, true, sectionId);
       int lessonId = updatedLesson == null ? -1 : updatedLesson.getId();
@@ -212,7 +211,7 @@ public class CCPushLesson extends DumbAwareAction {
       else {
         RemoteCourse course = (RemoteCourse)StudyTaskManager.getInstance(project).getCourse();
         assert  course != null;
-        sectionId = StepikUtils.getTopLevelSectionId(project, course);
+        sectionId = CCStepikConnector.getTopLevelSectionId(project, course);
       }
       CCStepikConnector.updateLessonInfo(project, lesson, false, sectionId);
       lesson.setStepikChangeStatus(StepikChangeStatus.UP_TO_DATE);

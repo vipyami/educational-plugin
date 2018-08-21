@@ -9,7 +9,6 @@ import com.jetbrains.edu.learning.*;
 import com.jetbrains.edu.learning.courseFormat.tasks.Task;
 import com.jetbrains.edu.learning.stepik.StepikConnector;
 import com.jetbrains.edu.learning.stepik.StepikNames;
-import com.jetbrains.edu.learning.stepik.StepikUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -80,7 +79,7 @@ public class RemoteCourse extends Course {
 
   @Override
   public boolean isUpToDate() {
-    if (id == 0 || !StepikUtils.isLoggedIn()) return true;
+    if (id == 0 || !EduSettings.isLoggedIn()) return true;
 
     RemoteCourse courseFromServer = StepikConnector.getCourseInfo(EduSettings.getInstance().getUser(), id, isCompatible);
     if (courseFromServer == null) return true;

@@ -656,11 +656,8 @@ public class StepikConnector {
             lesson = new FrameworkLesson(lesson);
           }
         }
-        ArrayList<Task> tasks = getTasks(remoteCourse, stepIds, allStepSources);
-
-        for (Task task : tasks) {
-          lesson.addTask(task);
-        }
+        List<Task> tasks = getTasks(remoteCourse, stepIds, allStepSources);
+        lesson.taskList.addAll(tasks);
         lessons.add(lesson);
       }
     }
@@ -677,8 +674,8 @@ public class StepikConnector {
   }
 
   @NotNull
-  public static ArrayList<Task> getTasks(RemoteCourse remoteCourse, String[] stepIds, List<StepSource> allStepSources) {
-    ArrayList<Task> tasks = new ArrayList<>();
+  public static List<Task> getTasks(RemoteCourse remoteCourse, String[] stepIds, List<StepSource> allStepSources) {
+    List<Task> tasks = new ArrayList<>();
     for (int i = 0; i < allStepSources.size(); i++) {
       StepSource step = allStepSources.get(i);
       Integer stepId = Integer.valueOf(stepIds[i]);
@@ -736,7 +733,7 @@ public class StepikConnector {
   }
 
   private static <T> T getFromStepik(String link, final Class<T> container) throws IOException {
-    if (StepikUtils.isLoggedIn()) {
+    if (EduSettings.isLoggedIn()) {
       final StepicUser user = EduSettings.getInstance().getUser();
       assert user != null;
       return StepikAuthorizedClient.getFromStepik(link, container, user);
@@ -934,7 +931,7 @@ public class StepikConnector {
 
   static String postAttempt(int id) throws IOException {
     final CloseableHttpClient client = StepikAuthorizedClient.getHttpClient();
-    if (client == null || !StepikUtils.isLoggedIn()) return "";
+    if (client == null || !EduSettings.isLoggedIn()) return "";
     final HttpPost attemptRequest = new HttpPost(StepikNames.STEPIK_API_URL + StepikNames.ATTEMPTS);
     String attemptRequestBody = new Gson().toJson(new AttemptWrapper(id));
     attemptRequest.setEntity(new StringEntity(attemptRequestBody, ContentType.APPLICATION_JSON));
@@ -1054,7 +1051,7 @@ public class StepikConnector {
   }
 
   public static void postTheory(Task task, final Project project) {
-    if (!StepikUtils.isLoggedIn()) {
+    if (!EduSettings.isLoggedIn()) {
       return;
     }
     final int stepId = task.getStepId();
