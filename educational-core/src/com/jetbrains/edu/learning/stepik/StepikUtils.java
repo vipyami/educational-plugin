@@ -38,7 +38,7 @@ public class StepikUtils {
     String finalText = text;
     final Course course = TaskExt.getCourse(task);
     if (task instanceof TheoryTask && course != null && course.isAdaptive()) {
-      finalText += "<br/><br/><b>Note</b>: This theory task aims to help you solve difficult tasks. ";
+      finalText += "<br/><br/><b>Note</b>: This theory task aims to help you solve difficult tasks. <br> Press Check button to get next task";
     }
     else if (task instanceof CodeTask && adaptive) {
       finalText += "<br/><br/><b>Note</b>: Use standard input to obtain input for the task.";
