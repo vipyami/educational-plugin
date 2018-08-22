@@ -147,7 +147,7 @@ class StepikCourseUploader(val project: Project, val course: RemoteCourse) {
         processCourseContentChanged(lastUpdateDate)
       }
       StepikChangeStatus.UP_TO_DATE -> {
-
+        // do nothing
       }
     }
   }
