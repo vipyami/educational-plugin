@@ -663,7 +663,7 @@ public class CCStepikConnector {
 
   public static Lesson updateLessonInfo(@NotNull final Project project,
                                         @NotNull final Lesson lesson,
-                                        boolean showNotification, int sectionId1) {
+                                        boolean showNotification, int sectionId) {
     if (!checkIfAuthorized(project, "update lesson")) return null;
 
     final HttpPut request = new HttpPut(StepikNames.STEPIK_API_URL + StepikNames.LESSONS + String.valueOf(lesson.getId()));
@@ -696,7 +696,7 @@ public class CCStepikConnector {
       }
 
       if (!lesson.isAdditional()) {
-        updateUnit(lesson.unitId, lesson.getId(), lesson.getIndex(), sectionId1, project);
+        updateUnit(lesson.unitId, lesson.getId(), lesson.getIndex(), sectionId, project);
       }
 
       return new Gson().fromJson(responseString, StepikWrappers.LessonContainer.class).lessons.get(0);
