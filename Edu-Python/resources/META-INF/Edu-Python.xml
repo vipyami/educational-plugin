@@ -32,6 +32,7 @@
     <configurator implementationClass="com.jetbrains.edu.python.learning.checkio.pycharm.PyCheckiOConfigurator" language="CheckiO-Python"/>
     <coursesProvider implementation="com.jetbrains.edu.python.learning.checkio.PyCheckiOCourseProvider"/>
     <optionsProvider instance="com.jetbrains.edu.python.learning.checkio.settings.PyCheckiOOptions"/>
+    <checkListener implementation="com.jetbrains.edu.python.learning.checkio.checker.PyCheckiOCheckListener"/>
   </extensions>
 
   <extensions defaultExtensionNs="educational">
