@@ -107,7 +107,7 @@ public class CoursesPanel extends JPanel {
       if (myErrorState == ErrorState.NotLoggedIn.INSTANCE || myErrorState == ErrorState.StepikLoginRequired.INSTANCE) {
         addLoginListener(this::updateCoursesList);
         StepikConnector.doAuthorize(EduUtils::showOAuthDialog);
-      } else if (myErrorState == ErrorState.CheckiOLoginRequired.INSTANCE) {
+      } else if (myErrorState instanceof ErrorState.CheckiOLoginRequired) {
         addCheckiOLoginListener((CheckiOCourse) myCoursesList.getSelectedValue());
       } else if (myErrorState == ErrorState.IncompatibleVersion.INSTANCE) {
         PluginsAdvertiser.installAndEnablePlugins(SetsKt.setOf(EduNames.PLUGIN_ID), () -> {});
