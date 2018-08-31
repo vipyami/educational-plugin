@@ -7,13 +7,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
+import com.jetbrains.edu.learning.courseFormat.FeedbackLink
 import com.jetbrains.edu.learning.courseFormat.TaskFile
 
 @Suppress("UNUSED_PARAMETER") // used for yaml serialization
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
                 isGetterVisibility = JsonAutoDetect.Visibility.NONE,
                 fieldVisibility = JsonAutoDetect.Visibility.NONE)
-@JsonPropertyOrder("type")
+@JsonPropertyOrder("type", "feedback_link")
 abstract class TaskYamlMixin {
   @JsonProperty("type")
   fun getTaskType(): String {
@@ -30,6 +31,8 @@ abstract class TaskYamlMixin {
   open fun setTaskFileValues(taskFiles: List<TaskFile>) {
     throw NotImplementedInMixin()
   }
+
+  @JsonProperty(value = "feedback_link", access = JsonProperty.Access.READ_WRITE) lateinit var myFeedbackLink: FeedbackLink
 }
 
 private class TaskFileConverter : StdConverter<TaskFile, TaskFileWithoutPlaceholders>() {
