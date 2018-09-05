@@ -1,4 +1,10 @@
 <html>
 Write your task text here.
 <br>
+<div class="hint">
+  <label class="header icon-angle-right">Sample Hint</label>
+  <div class="content">
+    You can add hints anywhere in task text. Copy all hint div block and change title and content.
+  </div>
+</div>
 </html>

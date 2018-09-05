@@ -1,0 +1,37 @@
+@font-face {
+    font-family: "hint-icon-font";
+    src:url("fonts/hint-icon-font.eot");
+    src:url("fonts/hint-icon-font.eot?#iefix") format("embedded-opentype"),
+    url("fonts/hint-icon-font.woff") format("woff"),
+    url("fonts/hint-icon-font.ttf") format("truetype"),
+    url("fonts/hint-icon-font.svg#hint-icon-font") format("svg");
+}
+
+.header {
+    color: #2470B3;
+    font-size: inherit;
+}
+
+.header:hover {
+    cursor: pointer;
+}
+
+.hint .header:before {
+    font-family: "hint-icon-font";
+    content: "\e002";
+    margin-right: 5px;
+}
+.header:after {
+    font-family: "hint-icon-font";
+    content: "\e000";
+    margin-left: 8px;
+}
+
+.header.checked:after {
+    font-family: "hint-icon-font";
+    content: "\e001";
+}
+
+.content {
+    display: none;
+}

@@ -239,13 +239,14 @@ public class BrowserWindow extends JFrame {
     }
     return document.outerHtml();
   }
+
   @NotNull
   private static String createHtmlWithCodeHighlighting(@NotNull final String content,
                                                 @NotNull String languageScriptUrl,
                                                 @NotNull String defaultHighlightingMode) {
     String template = null;
     ClassLoader classLoader = BrowserWindow.class.getClassLoader();
-    InputStream stream = classLoader.getResourceAsStream("/code-mirror/template.html");
+    InputStream stream = classLoader.getResourceAsStream("/style/template.html");
     try {
       template = StreamUtil.readText(stream, "utf-8");
     }
@@ -278,6 +279,8 @@ public class BrowserWindow extends JFrame {
     template = template.replace("${body_line_height}", String.valueOf(bodyLineHeight));
     template = template.replace("${code_line_height}", String.valueOf(codeLineHeight));
     template = template.replace("${codemirror}", classLoader.getResource("/code-mirror/codemirror.js").toExternalForm());
+    template = template.replace("${hint_base}", classLoader.getResource("/style/hint/base.css").toExternalForm());
+    template = template.replace("${jquery}", classLoader.getResource("/style/hint/jquery-1.9.1.js").toExternalForm());
     template = template.replace("${language_script}", languageScriptUrl);
     template = template.replace("${default_mode}", defaultHighlightingMode);
     template = template.replace("${runmode}", classLoader.getResource("/code-mirror/runmode.js").toExternalForm());
