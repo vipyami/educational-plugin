@@ -276,24 +276,37 @@ public class BrowserWindow extends JFrame {
     template = template.replace("${code_font_size}", String.valueOf(codeFontSize));
     template = template.replace("${body_line_height}", String.valueOf(bodyLineHeight));
     template = template.replace("${code_line_height}", String.valueOf(codeLineHeight));
-    template = template.replace("${codemirror}", classLoader.getResource("/code-mirror/codemirror.js").toExternalForm());
-    template = template.replace("${hint_base}", classLoader.getResource("/style/hint/base.css").toExternalForm());
-    template = template.replace("${jquery}", classLoader.getResource("/style/hint/jquery-1.9.1.js").toExternalForm());
+    template = setResourcePath(template, "${codemirror}", "/code-mirror/codemirror.js");
+    template = setResourcePath(template, "${hint_base}", "/style/hint/base.css");
+    template = setResourcePath(template, "${jquery}", "/style/hint/jquery-1.9.1.js");
     template = template.replace("${language_script}", languageScriptUrl);
     template = template.replace("${default_mode}", defaultHighlightingMode);
-    template = template.replace("${runmode}", classLoader.getResource("/code-mirror/runmode.js").toExternalForm());
-    template = template.replace("${colorize}", classLoader.getResource("/code-mirror/colorize.js").toExternalForm());
-    template = template.replace("${javascript}", classLoader.getResource("/code-mirror/javascript.js").toExternalForm());
+    template = setResourcePath(template, "${runmode}", "/code-mirror/runmode.js");
+    template = setResourcePath(template, "${colorize}", "/code-mirror/colorize.js");
+    template = setResourcePath(template, "${javascript}", "/code-mirror/javascript.js");
+
     if (LafManager.getInstance().getCurrentLookAndFeel() instanceof DarculaLookAndFeelInfo) {
-      template = template.replace("${css_oldcodemirror}", classLoader.getResource("/code-mirror/codemirror-old-darcula.css").toExternalForm());
-      template = template.replace("${css_codemirror}", classLoader.getResource("/code-mirror/codemirror-darcula.css").toExternalForm());
+      template = setResourcePath(template, "${css_oldcodemirror}", "/code-mirror/codemirror-old-darcula.css");
+      template = setResourcePath(template, "${css_codemirror}", "/code-mirror/codemirror-darcula.css");
     }
     else {
-      template = template.replace("${css_oldcodemirror}", classLoader.getResource("/code-mirror/codemirror-old.css").toExternalForm());
-      template = template.replace("${css_codemirror}", classLoader.getResource("/code-mirror/codemirror.css").toExternalForm());
+      template = setResourcePath(template, "${css_oldcodemirror}", "/code-mirror/codemirror-old.css");
+      template = setResourcePath(template, "${css_codemirror}", "/code-mirror/codemirror.css");
     }
     template = template.replace("${code}", content);
 
+    return template;
+  }
+
+  private static String setResourcePath(@NotNull String template, @NotNull String name, @NotNull String recoursePath) {
+    ClassLoader classLoader = BrowserWindow.class.getClassLoader();
+    URL codemirrorScript = classLoader.getResource(recoursePath);
+    if (codemirrorScript != null) {
+      template = template.replace(name, codemirrorScript.toExternalForm());
+    }
+    else {
+      LOG.warn("Resource not found: " + recoursePath);
+    }
     return template;
   }
 
