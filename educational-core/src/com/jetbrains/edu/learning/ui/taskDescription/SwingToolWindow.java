@@ -50,7 +50,8 @@ public class SwingToolWindow extends TaskDescriptionToolWindow {
     final Font font = new Font(fontName, Font.PLAIN, fontSize);
     String dimmedColor = ColorUtil.toHex(ColorUtil.dimmer(UIUtil.getPanelBackground()));
     int size = font.getSize();
-    String bodyRule = String.format("body { font-family: %s; font-size: %dpt; }", font.getFamily(), size);
+    String bodyRule = String.format("body { font-family: %s; font-size: %dpt; } \n" +
+                                    "a {}", font.getFamily(), size);
     String preRule = String.format("pre {font-family: Courier; font-size: %dpt; " +
       "display: inline; ine-height: 50px; padding-top: 5px; padding-bottom: 5px; " +
       "padding-left: 5px; background-color:%s;}", fontSize, dimmedColor);
@@ -87,6 +88,11 @@ public class SwingToolWindow extends TaskDescriptionToolWindow {
 
   public void setText(@NotNull String text) {
     myTaskTextPane.setText(text);
+  }
+
+  @Override
+  protected void updateLaf(boolean isDarcula) {
+    myTaskTextPane.setBackground(EditorColorsManager.getInstance().getGlobalScheme().getDefaultBackground());
   }
 }
 

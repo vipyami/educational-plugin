@@ -46,6 +46,11 @@ public class JavaFxToolWindow extends TaskDescriptionToolWindow {
   }
 
   @Override
+  protected void updateLaf(boolean isDarcula) {
+    myBrowserWindow.updateLaf(isDarcula);
+  }
+
+  @Override
   public void setText(@NotNull String text) {
     myBrowserWindow.loadContent(text);
   }

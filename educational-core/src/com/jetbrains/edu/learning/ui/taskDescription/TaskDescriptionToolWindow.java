@@ -17,6 +17,9 @@ package com.jetbrains.edu.learning.ui.taskDescription;
 
 import com.intellij.codeInsight.documentation.DocumentationManagerProtocol;
 import com.intellij.ide.actions.QualifiedNameProvider;
+import com.intellij.ide.ui.LafManager;
+import com.intellij.ide.ui.LafManagerListener;
+import com.intellij.ide.ui.laf.darcula.DarculaLookAndFeelInfo;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.Application;
@@ -89,6 +92,9 @@ public abstract class TaskDescriptionToolWindow extends SimpleToolWindowPanel im
 
     project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER,
                                                 new EduFileEditorManagerListener(this, project));
+
+    LafManager.getInstance().addLafManagerListener(new StudyLafManagerListener());
+
     Task task = EduUtils.getCurrentTask(project);
     setCurrentTask(project, task);
   }
@@ -198,6 +204,8 @@ public abstract class TaskDescriptionToolWindow extends SimpleToolWindowPanel im
     return super.getData(dataId);
   }
 
+  protected abstract void updateLaf(boolean isDarcula);
+
   public static void navigateToPsiElement(@NotNull Project project, @NotNull String url) {
     String qualifiedName = url.replace(PSI_ELEMENT_PROTOCOL, "");
 
@@ -214,5 +222,12 @@ public abstract class TaskDescriptionToolWindow extends SimpleToolWindowPanel im
         }
       }
     }));
+  }
+
+  private class StudyLafManagerListener implements LafManagerListener {
+    @Override
+    public void lookAndFeelChanged(LafManager manager) {
+      updateLaf(manager.getCurrentLookAndFeel() instanceof DarculaLookAndFeelInfo);
+    }
   }
 }

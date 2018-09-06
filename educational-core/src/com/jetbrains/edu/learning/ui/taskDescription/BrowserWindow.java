@@ -3,7 +3,6 @@ package com.jetbrains.edu.learning.ui.taskDescription;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.ui.LafManager;
-import com.intellij.ide.ui.LafManagerListener;
 import com.intellij.ide.ui.laf.darcula.DarculaLookAndFeelInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -99,11 +98,10 @@ public class BrowserWindow extends JFrame {
     setLayout(new BorderLayout());
     setPanel(new JFXPanel());
     setTitle("Study Browser");
-    LafManager.getInstance().addLafManagerListener(new StudyLafManagerListener());
     initComponents();
   }
 
-  private void updateLaf(boolean isDarcula) {
+  void updateLaf(boolean isDarcula) {
     if (isDarcula) {
       updateLafDarcula();
     }
@@ -485,12 +483,5 @@ public class BrowserWindow extends JFrame {
 
   private void setPanel(JFXPanel panel) {
     myPanel = panel;
-  }
-
-  private class StudyLafManagerListener implements LafManagerListener {
-    @Override
-    public void lookAndFeelChanged(LafManager manager) {
-      updateLaf(manager.getCurrentLookAndFeel() instanceof DarculaLookAndFeelInfo);
-    }
   }
 }
