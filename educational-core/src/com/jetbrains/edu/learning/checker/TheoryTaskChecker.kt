@@ -26,6 +26,4 @@ open class TheoryTaskChecker(task: TheoryTask, project: Project) : TaskChecker<T
         }
         return CheckResult(CheckStatus.Solved, "")
     }
-
-    override fun checkOnRemote() = check()
 }
