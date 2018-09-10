@@ -19,6 +19,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.intellij.ide.RecentProjectsManager;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.idea.ActionsBundle;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -33,6 +36,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.PlatformProjectOpenProcessor;
 import com.intellij.projectImport.ProjectOpenedCallback;
 import com.intellij.util.PathUtil;
+import com.intellij.util.xmlb.XmlSerializer;
 import com.jetbrains.edu.coursecreator.CCUtils;
 import com.jetbrains.edu.coursecreator.configuration.YamlFormatSynchronizer;
 import com.jetbrains.edu.coursecreator.stepik.StepikChangeRetriever;
@@ -47,9 +51,11 @@ import com.jetbrains.edu.learning.courseFormat.StepikChangeStatus;
 import com.jetbrains.edu.learning.courseGeneration.GeneratorUtils;
 import com.jetbrains.edu.learning.statistics.EduUsagesCollector;
 import com.jetbrains.edu.learning.stepik.*;
+import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.event.HyperlinkEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -207,8 +213,30 @@ public abstract class CourseProjectGenerator<S> {
       new StepikChangeRetriever(project, courseFromStepik).setStepikChangeStatuses();
     }
     else {
+      showConvertCourseToLocalNotification(project);
       LOG.warn("Failed to get stepik course for imported from zip course with id: " + myCourse.getId());
     }
+  }
+
+  private void showConvertCourseToLocalNotification(@NotNull Project project) {
+    String message = "Course not found on Stepik<br> <a href=\"reset\">Convert course to local</a>";
+    Notification notification = new Notification("project.generation", "Course not found", message, NotificationType.ERROR,
+                                                 new NotificationListener.Adapter() {
+                                                   @Override
+                                                   protected void hyperlinkActivated(@NotNull Notification notification, @NotNull HyperlinkEvent e) {
+                                                     myCourse = copyAsLocalCourse(myCourse);
+                                                     notification.expire();
+                                                   }
+
+                                                   @NotNull
+                                                   private Course copyAsLocalCourse(Course remoteCourse) {
+                                                     Element element = XmlSerializer.serialize(remoteCourse);
+                                                     Course copy = XmlSerializer.deserialize(element, Course.class);
+                                                     copy.init(null, null, true);
+                                                     return copy;
+                                                   }
+                                                 });
+    notification.notify(project);
   }
 
   protected void loadSolutions(@NotNull Project project, @NotNull Course course) {
