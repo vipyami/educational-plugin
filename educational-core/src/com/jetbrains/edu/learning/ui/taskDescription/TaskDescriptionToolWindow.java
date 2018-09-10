@@ -45,6 +45,10 @@ import com.jetbrains.edu.learning.editor.EduFileEditorManagerListener;
 import com.jetbrains.edu.learning.stepik.StepikAdaptiveReactionsPanel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import javax.swing.*;
 import java.awt.*;
@@ -163,6 +167,19 @@ public abstract class TaskDescriptionToolWindow extends SimpleToolWindowPanel im
   public void updateFonts(@NotNull Project project) {
     
   }
+
+  protected String wrapHints(@NotNull String text, @NotNull String hintBlockTemplate) {
+    Document document = Jsoup.parse(text);
+    Elements hints = document.getElementsByClass("hint");
+    for (int i = 0; i < hints.size(); i++) {
+      Element hint = hints.get(i);
+      String hintText = wrapHint(hint.ownText(), i + 1);
+      hint.html(hintText);
+    }
+    return document.html();
+  }
+
+  protected abstract String wrapHint(@NotNull String hintText, int hintNumber);
 
   public void updateTask(@NotNull Project project, @Nullable Task task) {
     if (myCurrentTask != task) {

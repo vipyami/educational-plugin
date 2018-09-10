@@ -27,9 +27,6 @@ import com.intellij.util.ui.UIUtil;
 import com.jetbrains.edu.learning.StudyTaskManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -48,6 +45,7 @@ import java.io.IOException;
 public class SwingToolWindow extends TaskDescriptionToolWindow {
   private static final Logger LOG = Logger.getInstance(SwingToolWindow.class);
   private static final String HINT_PROTOCOL = "hint://";
+  private static final String HINT_BLOCK_TEMPLATE = "<a href='hint://', value='%s'>Hint %d</a>";
   private JTextPane myTaskTextPane;
 
   public SwingToolWindow() {
@@ -94,21 +92,15 @@ public class SwingToolWindow extends TaskDescriptionToolWindow {
   }
 
   public void setText(@NotNull String text) {
-    Document document = wrapHintsIntoLink(text);
-    myTaskTextPane.setText(document.html());
+    String wrappedText = wrapHints(text, HINT_BLOCK_TEMPLATE);
+    myTaskTextPane.setText(wrappedText);
   }
 
-  @NotNull
-  private static Document wrapHintsIntoLink(@NotNull String text) {
-    Document document = Jsoup.parse(text);
-    Elements hints = document.getElementsByClass("hint");
-    for (int i = 0; i < hints.size(); i++) {
-      org.jsoup.nodes.Element hint = hints.get(i);
-      String link = String.format("<a href='hint://', value='%s'>Hint %d</a>", hint.child(0).ownText(), i + 1);
-      hint.html(link);
-    }
-    return document;
+  @Override
+  protected String wrapHint(@NotNull String hintText, int hintNumber) {
+    return String.format(HINT_BLOCK_TEMPLATE, hintText, hintNumber);
   }
+
 
   @Override
   protected void updateLaf(boolean isDarcula) {

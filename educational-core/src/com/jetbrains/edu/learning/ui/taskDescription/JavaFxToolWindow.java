@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package com.jetbrains.edu.learning.ui.taskDescription;
+
 import com.intellij.openapi.project.Project;
 import com.jetbrains.edu.learning.EduUtils;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +23,10 @@ import javax.swing.*;
 
 public class JavaFxToolWindow extends TaskDescriptionToolWindow {
   private BrowserWindow myBrowserWindow;
+  private static final String HINT_BLOCK_TEMPLATE = "<label class=\"header icon-angle-right\">Hint %d</label>\n" +
+                                                    "  <div class=\"content\">\n" +
+                                                    " %s" +
+                                                    "  </div>";
 
   public JavaFxToolWindow() {
     super();
@@ -46,12 +51,18 @@ public class JavaFxToolWindow extends TaskDescriptionToolWindow {
   }
 
   @Override
+  protected String wrapHint(@NotNull String hintText, int hintNumber) {
+    return String.format(HINT_BLOCK_TEMPLATE, hintNumber, hintText);
+  }
+
+  @Override
   protected void updateLaf(boolean isDarcula) {
     myBrowserWindow.updateLaf(isDarcula);
   }
 
   @Override
   public void setText(@NotNull String text) {
-    myBrowserWindow.loadContent(text);
+    String wrappedText = wrapHints(text, HINT_BLOCK_TEMPLATE);
+    myBrowserWindow.loadContent(wrappedText);
   }
 }
