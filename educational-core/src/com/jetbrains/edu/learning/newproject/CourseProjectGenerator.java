@@ -19,9 +19,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.intellij.ide.RecentProjectsManager;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.idea.ActionsBundle;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationListener;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -55,7 +52,6 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.event.HyperlinkEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -213,30 +209,18 @@ public abstract class CourseProjectGenerator<S> {
       new StepikChangeRetriever(project, courseFromStepik).setStepikChangeStatuses();
     }
     else {
-      showConvertCourseToLocalNotification(project);
       LOG.warn("Failed to get stepik course for imported from zip course with id: " + myCourse.getId());
+      LOG.info("Converting course to local. Course id: " + myCourse.getId());
+      myCourse = copyAsLocalCourse(myCourse);
     }
   }
 
-  private void showConvertCourseToLocalNotification(@NotNull Project project) {
-    String message = "Course not found on Stepik<br> <a href=\"reset\">Convert course to local</a>";
-    Notification notification = new Notification("project.generation", "Course not found", message, NotificationType.ERROR,
-                                                 new NotificationListener.Adapter() {
-                                                   @Override
-                                                   protected void hyperlinkActivated(@NotNull Notification notification, @NotNull HyperlinkEvent e) {
-                                                     myCourse = copyAsLocalCourse(myCourse);
-                                                     notification.expire();
-                                                   }
-
-                                                   @NotNull
-                                                   private Course copyAsLocalCourse(Course remoteCourse) {
-                                                     Element element = XmlSerializer.serialize(remoteCourse);
-                                                     Course copy = XmlSerializer.deserialize(element, Course.class);
-                                                     copy.init(null, null, true);
-                                                     return copy;
-                                                   }
-                                                 });
-    notification.notify(project);
+  @NotNull
+  private static Course copyAsLocalCourse(Course remoteCourse) {
+    Element element = XmlSerializer.serialize(remoteCourse);
+    Course copy = XmlSerializer.deserialize(element, Course.class);
+    copy.init(null, null, true);
+    return copy;
   }
 
   protected void loadSolutions(@NotNull Project project, @NotNull Course course) {
